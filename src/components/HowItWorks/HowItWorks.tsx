@@ -45,7 +45,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="flex flex-col items-center px-6 py-20">
+    <section id="how-it-works" className="flex flex-col items-center px-6 py-20 scroll-mt-20">
       {/* Badge */}
       <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2">
         <span className="text-sm font-medium text-cyan-400">Simple Process</span>
@@ -65,34 +65,62 @@ export default function HowItWorks() {
       </p>
 
       {/* Steps */}
-      <div className="relative mt-16 w-full max-w-5xl">
-        {/* Connecting Line - Desktop */}
-        <div className="absolute left-0 right-0 top-7 hidden h-0.5 bg-gradient-to-r from-[#a855f7] via-[#c084fc] to-[#a855f7] md:block" />
+      <div className="relative mt-12 w-full max-w-5xl">
+        {/* Desktop Layout */}
+        <div className="hidden md:block">
+          {/* Connecting Line - Desktop */}
+          <div className="absolute left-0 right-0 top-7 h-0.5 bg-gradient-to-r from-[#a855f7] via-[#c084fc] to-[#a855f7]" />
 
-        {/* Steps Grid */}
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-          {steps.map((step, index) => (
-            <div key={step.step} className="relative flex flex-col items-center text-center">
-              {/* Icon Circle */}
-              <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#a855f7] to-[#ec4899] text-white shadow-lg shadow-purple-500/30">
-                {step.icon}
+          {/* Steps Grid - Desktop */}
+          <div className="grid grid-cols-4 gap-6">
+            {steps.map((step) => (
+              <div key={step.step} className="relative flex flex-col items-center text-center">
+                {/* Icon Circle */}
+                <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#a855f7] to-[#ec4899] text-white shadow-lg shadow-purple-500/30">
+                  {step.icon}
+                </div>
+
+                {/* Step Number */}
+                <span className="mt-4 text-sm font-medium text-purple-400">Step {step.step}</span>
+
+                {/* Title */}
+                <h3 className="mt-2 text-lg font-semibold text-white">{step.title}</h3>
+
+                {/* Description */}
+                <p className="mt-2 text-sm leading-relaxed text-zinc-400">{step.description}</p>
               </div>
+            ))}
+          </div>
+        </div>
 
-              {/* Step Number */}
-              <span className="mt-4 text-sm font-medium text-purple-400">Step {step.step}</span>
+        {/* Mobile Layout */}
+        <div className="relative md:hidden">
+          {/* Vertical Connecting Line */}
+          <div className="absolute bottom-8 left-6 top-8 w-0.5 bg-gradient-to-b from-[#a855f7] via-[#c084fc] to-[#a855f7]" />
 
-              {/* Title */}
-              <h3 className="mt-2 text-lg font-semibold text-white">{step.title}</h3>
+          {/* Steps List - Mobile */}
+          <div className="flex flex-col gap-8">
+            {steps.map((step) => (
+              <div key={step.step} className="relative flex items-start gap-5">
+                {/* Icon Circle */}
+                <div className="relative z-10 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#a855f7] to-[#ec4899] text-white shadow-lg shadow-purple-500/30">
+                  {step.icon}
+                </div>
 
-              {/* Description */}
-              <p className="mt-2 text-sm leading-relaxed text-zinc-400">{step.description}</p>
+                {/* Content */}
+                <div className="flex-1 pt-1">
+                  {/* Step Number */}
+                  <span className="text-sm font-medium text-purple-400">Step {step.step}</span>
 
-              {/* Mobile Connector Line */}
-              {index < steps.length - 1 && (
-                <div className="absolute -bottom-4 left-1/2 h-8 w-0.5 -translate-x-1/2 bg-gradient-to-b from-[#a855f7] to-transparent md:hidden" />
-              )}
-            </div>
-          ))}
+                  {/* Title */}
+                  <h3 className="mt-1 text-lg font-semibold text-white">{step.title}</h3>
+
+                  {/* Description */}
+                  <p className="mt-1 text-sm leading-relaxed text-zinc-400">{step.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

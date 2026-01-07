@@ -4,6 +4,13 @@ import AdShowcase from "@/components/AdShowcase";
 import TrustSection from "@/components/TrustSection";
 import Features from "@/components/Features";
 import HowItWorks from "@/components/HowItWorks";
+import CTA from "@/components/CTA";
+import Testimonials from "@/components/Testimonials";
+import Comparison from "@/components/Comparison";
+import BusinessTypes from "@/components/BusinessTypes";
+import Pricing from "@/components/Pricing";
+import FAQ from "@/components/FAQ";
+import FinalCTA from "@/components/FinalCTA";
 
 const features = [
   { icon: "🎯", label: "20 Ad Archetypes" },
@@ -134,6 +141,20 @@ export default function Hero() {
     <Features />
 
     <HowItWorks />
+
+    <CTA />
+
+    <Testimonials />
+
+    <Comparison />
+
+    <BusinessTypes />
+
+    <Pricing />
+
+    <FAQ />
+
+    <FinalCTA />
     </>
   );
 }
