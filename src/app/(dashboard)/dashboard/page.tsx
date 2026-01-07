@@ -1,0 +1,267 @@
+"use client";
+
+import Link from "next/link";
+import { useSidebar } from "@/components/Sidebar/SidebarContext";
+
+export default function DashboardPage() {
+  const { open } = useSidebar();
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0f]">
+      {/* Header */}
+      <header className="flex h-[73px] items-center border-b border-[#1a1a22] px-8">
+        <button
+          onClick={open}
+          className="lg:hidden mr-4 text-white hover:text-zinc-400 transition-colors"
+          aria-label="Open sidebar"
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+        <h1 className="text-lg font-semibold text-white">Ad Generator</h1>
+      </header>
+
+      {/* Main Content */}
+      <main className="p-8">
+        {/* Welcome Section */}
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Welcome back!</h2>
+            <p className="mt-1 text-zinc-400">
+              Generate professional ad creatives in seconds.
+            </p>
+          </div>
+          <button className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            New Campaign
+          </button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {/* Campaigns Card */}
+          <div className="rounded-xl border border-[#684bf9]/50 bg-[#0d1117] p-5">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#684bf9]/20">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  style={{ color: "#684bf9" }}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">0</p>
+                <p className="text-sm text-zinc-400">Campaigns</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Ads Generated Card */}
+          <div className="rounded-xl border border-[#2d1f5e] bg-[#0d1117] p-5">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2d1f5e]/50">
+                <svg
+                  className="h-5 w-5 text-purple-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">0</p>
+                <p className="text-sm text-zinc-400">Ads Generated</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Current Plan Card */}
+          <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-5">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/20">
+                <svg
+                  className="h-5 w-5 text-purple-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-bold text-white">Agency</p>
+                  <span className="rounded-full bg-zinc-700 px-2.5 py-0.5 text-xs font-medium text-white">
+                    Unlimited
+                  </span>
+                </div>
+                <p className="text-sm text-zinc-400">Current Plan</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Projects Section */}
+        <div className="mb-8">
+          <h3 className="mb-4 text-lg font-semibold text-white">
+            Recent Projects
+          </h3>
+          <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-[#1a1a22] bg-[#0d1117] p-8">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-[#1a1a22]">
+              <svg
+                className="h-7 w-7 text-zinc-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                />
+              </svg>
+            </div>
+            <p className="mb-4 text-zinc-400">
+              No campaigns yet. Create your first one!
+            </p>
+            <button className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Create Campaign
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Actions Section */}
+        <div>
+          <h3 className="mb-4 text-lg font-semibold text-white">
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {/* Generate Ads from URL */}
+            <Link
+              href="/dashboard/generate"
+              className="flex flex-col items-center justify-center rounded-xl border border-[#1a1a22] bg-[#0d1117] p-8 transition-all hover:border-[#252530] hover:bg-[#12121a]"
+            >
+              <svg
+                className="mb-3 h-6 w-6 text-purple-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                />
+              </svg>
+              <span className="text-sm font-medium text-white">
+                Generate Ads from URL
+              </span>
+            </Link>
+
+            {/* Browse Projects */}
+            <Link
+              href="/dashboard/projects"
+              className="flex flex-col items-center justify-center rounded-xl border border-[#1a1a22] bg-[#0d1117] p-8 transition-all hover:border-[#252530] hover:bg-[#12121a]"
+            >
+              <svg
+                className="mb-3 h-6 w-6 text-purple-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                />
+              </svg>
+              <span className="text-sm font-medium text-white">
+                Browse Projects
+              </span>
+            </Link>
+
+            {/* View Usage */}
+            <Link
+              href="/dashboard/usage"
+              className="flex flex-col items-center justify-center rounded-xl border border-[#1a1a22] bg-[#0d1117] p-8 transition-all hover:border-[#252530] hover:bg-[#12121a]"
+            >
+              <svg
+                className="mb-3 h-6 w-6 text-purple-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              <span className="text-sm font-medium text-white">View Usage</span>
+            </Link>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
