@@ -36,7 +36,7 @@ export default function ProjectsPage() {
         {/* My Projects Section */}
         <div className="mb-8 flex items-start justify-between">
           <h2 className="text-2xl font-bold text-white">My Projects</h2>
-          <button className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
+          <button className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
             <svg
               className="h-4 w-4"
               fill="none"
@@ -75,7 +75,7 @@ export default function ProjectsPage() {
           <p className="mb-6 text-center text-zinc-400">
             Generate your first ad campaign to see it here.
           </p>
-          <button className="rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
+          <button className="rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
             Create Campaign
           </button>
         </div>

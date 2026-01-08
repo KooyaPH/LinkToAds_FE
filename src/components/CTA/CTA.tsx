@@ -17,7 +17,7 @@ export default function CTA() {
         {/* Headline */}
         <h2 className="max-w-2xl text-center text-2xl font-bold text-white md:text-3xl">
           Start Creating{" "}
-          <span className="bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#6666FF] to-[#FF66FF] bg-clip-text text-transparent">
             High-Converting Ads
           </span>{" "}
           Today
@@ -31,7 +31,7 @@ export default function CTA() {
         {/* CTA Button */}
         <Link
           href="/pricing"
-          className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
+          className="mt-6 inline-flex items-center gap-2 rounded bg-gradient-to-r from-[#6666FF] to-[#FF66FF] px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
         >
           Pick Your Plan
           <svg

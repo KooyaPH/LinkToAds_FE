@@ -9,8 +9,8 @@ const businessTypes = [
     ),
     title: "E-Commerce",
     description: "Auto-extract visuals and generate social proof ads that drive purchases.",
-    iconBg: "bg-purple-500/20",
-    iconColor: "text-purple-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
   {
     icon: (
@@ -20,8 +20,8 @@ const businessTypes = [
     ),
     title: "Service Providers",
     description: "Turn your service page into scroll-stopping ads. Highlight benefits, testimonials, and results.",
-    iconBg: "bg-purple-500/20",
-    iconColor: "text-purple-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
   {
     icon: (
@@ -31,8 +31,8 @@ const businessTypes = [
     ),
     title: "SaaS & Tech",
     description: "Use educational archetypes to highlight features and drive free trial signups.",
-    iconBg: "bg-purple-500/20",
-    iconColor: "text-purple-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
   {
     icon: (
@@ -42,8 +42,8 @@ const businessTypes = [
     ),
     title: "Agencies",
     description: "Regenerate copy in seconds for client revisions. Short, medium, or long — instant.",
-    iconBg: "bg-purple-500/20",
-    iconColor: "text-purple-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
   {
     icon: (
@@ -53,8 +53,8 @@ const businessTypes = [
     ),
     title: "Startups",
     description: "Launch campaigns fast with proven archetypes. No design team needed.",
-    iconBg: "bg-purple-500/20",
-    iconColor: "text-purple-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
   {
     icon: (
@@ -64,8 +64,8 @@ const businessTypes = [
     ),
     title: "Local Businesses",
     description: "Professional-quality ads from your website. Multiple sizes for every placement.",
-    iconBg: "bg-purple-500/20",
-    iconColor: "text-purple-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
 ];
 
@@ -75,7 +75,7 @@ export default function BusinessTypes() {
       {/* Headline */}
       <h2 className="text-center text-3xl font-bold text-white md:text-4xl">
         Built for{" "}
-        <span className="bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-[#6666FF] to-[#FF66FF] bg-clip-text text-transparent">
           Every Business
         </span>
       </h2>

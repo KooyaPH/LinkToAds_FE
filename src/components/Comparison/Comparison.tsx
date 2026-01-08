@@ -51,7 +51,7 @@ export default function Comparison() {
       {/* Headline */}
       <h2 className="text-center text-3xl font-bold text-white md:text-4xl">
         Why Choose{" "}
-        <span className="bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-[#6666FF] to-[#FF66FF] bg-clip-text text-transparent">
           LinkToAds
         </span>
       </h2>
@@ -100,7 +100,7 @@ export default function Comparison() {
               Features
             </span>
             {activeTab === "linkToAds" && (
-              <span className="rounded-full bg-gradient-to-r from-[#22d3ee] to-[#a855f7] px-3 py-1 text-xs font-semibold text-white">
+              <span className="rounded-full bg-gradient-to-r from-[#6666FF] to-[#FF66FF] px-3 py-1 text-xs font-semibold text-white">
                 Best Choice
               </span>
             )}
@@ -136,7 +136,7 @@ export default function Comparison() {
 
             {/* Header */}
             <div className="flex h-16 items-center justify-center border-b border-white/10">
-              <span className="bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-base font-semibold text-transparent">
+              <span className="bg-gradient-to-r from-[#6666FF] to-[#FF66FF] bg-clip-text text-base font-semibold text-transparent">
                 LinkToAds
               </span>
             </div>

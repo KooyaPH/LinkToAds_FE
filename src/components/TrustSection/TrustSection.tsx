@@ -13,22 +13,22 @@ const stats = [
   {
     value: "50,000+",
     label: "Ads Generated",
-    gradient: "from-[#ec4899] to-[#f472b6]",
+    gradient: "from-[#6666FF] to-[#FF66FF]",
   },
   {
     value: "20",
     label: "Ad Archetypes",
-    gradient: "from-[#a855f7] to-[#c084fc]",
+    gradient: "from-[#6666FF] to-[#FF66FF]",
   },
   {
     value: "4",
     label: "Banner Sizes",
-    gradient: "from-[#94a3b8] to-[#cbd5e1]",
+    gradient: "from-[#6666FF] to-[#FF66FF]",
   },
   {
     value: "60s",
     label: "Average Time",
-    gradient: "from-[#22d3ee] to-[#67e8f9]",
+    gradient: "from-[#6666FF] to-[#FF66FF]",
   },
 ];
 

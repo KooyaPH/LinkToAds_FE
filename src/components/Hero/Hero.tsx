@@ -26,7 +26,24 @@ export default function Hero() {
     <section className="flex flex-col items-center justify-center px-6 pt-24 pb-4 text-center">
       {/* Badge */}
       <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
-        <span className="text-lg">✨</span>
+        <svg
+          className="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 2L14.59 9L22 11L14.59 13L12 20L9.41 13L2 11L9.41 9L12 2Z"
+            fill="#7F52FF"
+            stroke="#7F52FF"
+            strokeWidth="0.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ filter: "drop-shadow(0 0 0.5px rgba(127, 82, 255, 0.5))" }}
+          />
+          <circle cx="19" cy="5" r="1.5" fill="#7F52FF" />
+          <circle cx="5" cy="19" r="1.5" fill="#7F52FF" />
+        </svg>
         <span className="text-sm font-medium text-zinc-300">
           AI-Powered Ad Generation
         </span>
@@ -36,7 +53,7 @@ export default function Hero() {
       <h1 className="max-w-5xl text-5xl font-extrabold leading-[1.1] tracking-tight text-white md:text-6xl lg:text-7xl xl:text-8xl">
         Turn Any Website into{" "}
         <br />
-        <span className="bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-[#6666FF] to-[#FF66FF] bg-clip-text text-transparent">
           10+ Facebook Ads
         </span>
       </h1>

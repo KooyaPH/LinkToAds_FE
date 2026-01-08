@@ -53,7 +53,7 @@ export default function Testimonials() {
       {/* Headline */}
       <h2 className="text-center text-3xl font-bold text-white md:text-4xl">
         Loved by{" "}
-        <span className="bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-[#6666FF] to-[#FF66FF] bg-clip-text text-transparent">
           Marketers
         </span>
       </h2>

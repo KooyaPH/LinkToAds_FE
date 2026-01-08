@@ -10,8 +10,8 @@ const features = [
     title: "Smart Website Scraping",
     description: "Auto-extract logos, images, brand colors, and key messaging from any URL in seconds.",
     tag: "Just paste a link",
-    iconBg: "bg-blue-500/20",
-    iconColor: "text-blue-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
   {
     icon: (
@@ -22,8 +22,8 @@ const features = [
     title: "20 Proven Archetypes",
     description: "Choose from social proof, urgency, educational, native, and service-focused ad templates.",
     tag: "Tested formulas",
-    iconBg: "bg-cyan-500/20",
-    iconColor: "text-cyan-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
   {
     icon: (
@@ -34,8 +34,8 @@ const features = [
     title: "AI Copywriting",
     description: "Generate scroll-stopping headlines and primary text optimized for Facebook's algorithm.",
     tag: "Click-worthy copy",
-    iconBg: "bg-purple-500/20",
-    iconColor: "text-purple-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
   {
     icon: (
@@ -46,8 +46,8 @@ const features = [
     title: "1-Click Regeneration",
     description: "Regenerate copy per ad with short, medium, or long options. Perfect your message instantly.",
     tag: "Unlimited variations",
-    iconBg: "bg-blue-500/20",
-    iconColor: "text-blue-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
   {
     icon: (
@@ -58,8 +58,8 @@ const features = [
     title: "4 Banner Sizes",
     description: "1:1 Square, 4:5 Portrait, 9:16 Story, and 16:9 Landscape - all platform-optimized.",
     tag: "Every placement",
-    iconBg: "bg-cyan-500/20",
-    iconColor: "text-cyan-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
   {
     icon: (
@@ -70,8 +70,8 @@ const features = [
     title: "Custom Asset Upload",
     description: "Use your own logo and photos for fully personalized banner creatives.",
     tag: "Your brand, your way",
-    iconBg: "bg-purple-500/20",
-    iconColor: "text-purple-400",
+    iconBg: "bg-[#2b1b4b]",
+    iconColor: "text-[#6a4cff]",
   },
 ];
 
@@ -116,9 +116,16 @@ export default function Features() {
             <p className="mb-4 text-sm leading-relaxed text-zinc-400">{feature.description}</p>
 
             {/* Tag */}
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1">
-              <span className="text-xs">✨</span>
-              <span className="text-xs font-medium text-purple-400">{feature.tag}</span>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#171738] px-3 py-1">
+              <svg
+                className="h-3 w-3"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 -960 960 960"
+                fill="#6a4cff"
+              >
+                <path d="m422-232 207-248H469l29-227-185 267h139l-30 208ZM320-80l40-280H160l360-520h80l-40 320h240L400-80h-80Zm151-390Z" />
+              </svg>
+              <span className="text-xs font-medium text-[#6a4cff]">{feature.tag}</span>
             </div>
           </div>
         ))}

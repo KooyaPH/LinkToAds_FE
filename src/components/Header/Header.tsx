@@ -22,7 +22,7 @@ export default function Header() {
             height={28}
             className="h-7 w-7"
           />
-          <span className="bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-xl font-bold text-transparent">
+          <span className="bg-gradient-to-r from-[#6666FF] to-[#FF66FF] bg-clip-text text-xl font-bold text-transparent">
             LinkToAds
           </span>
         </Link>
@@ -50,7 +50,7 @@ export default function Header() {
           </Link>
           <Link
             href="/get-started"
-            className="rounded-full bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] px-5 py-2 text-sm font-medium text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
+            className="rounded bg-gradient-to-r from-[#6666FF] to-[#FF66FF] px-5 py-2 text-sm font-medium text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
           >
             Get Started
           </Link>

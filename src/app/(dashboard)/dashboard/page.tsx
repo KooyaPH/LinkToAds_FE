@@ -9,7 +9,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
       {/* Header */}
-      <header className="flex h-[73px] items-center border-b border-[#1a1a22] px-8">
+      <header className="flex h-[73px] items-center border-b border-[#1a183e] px-8">
         <button
           onClick={open}
           className="lg:hidden mr-4 text-white hover:text-zinc-400 transition-colors"
@@ -42,7 +42,7 @@ export default function DashboardPage() {
               Generate professional ad creatives in seconds.
             </p>
           </div>
-          <button className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
+          <button className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
             <svg
               className="h-4 w-4"
               fill="none"
@@ -63,7 +63,7 @@ export default function DashboardPage() {
         {/* Stats Cards */}
         <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
           {/* Campaigns Card */}
-          <div className="rounded-xl border border-[#684bf9]/50 bg-[#0d1117] p-5">
+          <div className="rounded-xl border border-[#1a183e] bg-[#0d1117] p-5">
             <div className="flex items-center gap-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#684bf9]/20">
                 <svg
@@ -89,7 +89,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Ads Generated Card */}
-          <div className="rounded-xl border border-[#2d1f5e] bg-[#0d1117] p-5">
+          <div className="rounded-xl border border-[#1a183e] bg-[#0d1117] p-5">
             <div className="flex items-center gap-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2d1f5e]/50">
                 <svg
@@ -114,14 +114,15 @@ export default function DashboardPage() {
           </div>
 
           {/* Current Plan Card */}
-          <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-5">
+          <div className="rounded-xl border border-[#1a183e] bg-[#0d1117] p-5">
             <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/20">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#684bf9]/20">
                 <svg
-                  className="h-5 w-5 text-purple-400"
+                  className="h-5 w-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  style={{ color: "#684bf9" }}
                 >
                   <path
                     strokeLinecap="round"
@@ -149,7 +150,7 @@ export default function DashboardPage() {
           <h3 className="mb-4 text-lg font-semibold text-white">
             Recent Projects
           </h3>
-          <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-[#1a1a22] bg-[#0d1117] p-8">
+          <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-[#1a183e] bg-[#0d1117] p-8">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-[#1a1a22]">
               <svg
                 className="h-7 w-7 text-zinc-500"
@@ -168,7 +169,7 @@ export default function DashboardPage() {
             <p className="mb-4 text-zinc-400">
               No campaigns yet. Create your first one!
             </p>
-            <button className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
+            <button className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
               <svg
                 className="h-4 w-4"
                 fill="none"
@@ -196,10 +197,10 @@ export default function DashboardPage() {
             {/* Generate Ads from URL */}
             <Link
               href="/dashboard/generate"
-              className="flex flex-col items-center justify-center rounded-xl border border-[#1a1a22] bg-[#0d1117] p-8 transition-all hover:border-[#252530] hover:bg-[#12121a]"
+              className="flex flex-col items-center justify-center rounded-xl border border-[#1a183e] bg-[#0d1117] p-8 transition-all hover:border-[#1a183e] hover:bg-[#12121a]"
             >
               <svg
-                className="mb-3 h-6 w-6 text-purple-400"
+                className="mb-3 h-6 w-6 text-[#6a4cff]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -219,10 +220,10 @@ export default function DashboardPage() {
             {/* Browse Projects */}
             <Link
               href="/dashboard/projects"
-              className="flex flex-col items-center justify-center rounded-xl border border-[#1a1a22] bg-[#0d1117] p-8 transition-all hover:border-[#252530] hover:bg-[#12121a]"
+              className="flex flex-col items-center justify-center rounded-xl border border-[#1a183e] bg-[#0d1117] p-8 transition-all hover:border-[#1a183e] hover:bg-[#12121a]"
             >
               <svg
-                className="mb-3 h-6 w-6 text-purple-400"
+                className="mb-3 h-6 w-6 text-[#6a4cff]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -242,10 +243,10 @@ export default function DashboardPage() {
             {/* View Usage */}
             <Link
               href="/dashboard/usage"
-              className="flex flex-col items-center justify-center rounded-xl border border-[#1a1a22] bg-[#0d1117] p-8 transition-all hover:border-[#252530] hover:bg-[#12121a]"
+              className="flex flex-col items-center justify-center rounded-xl border border-[#1a183e] bg-[#0d1117] p-8 transition-all hover:border-[#1a183e] hover:bg-[#12121a]"
             >
               <svg
-                className="mb-3 h-6 w-6 text-purple-400"
+                className="mb-3 h-6 w-6 text-[#6a4cff]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

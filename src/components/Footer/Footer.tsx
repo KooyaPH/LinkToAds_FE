@@ -25,7 +25,7 @@ export default function Footer() {
             height={24}
             className="h-6 w-6"
           />
-          <span className="bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-lg font-bold text-transparent">
+          <span className="bg-gradient-to-r from-[#6666FF] to-[#FF66FF] bg-clip-text text-lg font-bold text-transparent">
             LinkToAds
           </span>
         </Link>
