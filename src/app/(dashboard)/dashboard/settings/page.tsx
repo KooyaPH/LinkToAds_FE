@@ -1,25 +1,80 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSidebar } from "@/components/Sidebar/SidebarContext";
+import { api } from "@/lib/api";
+import { signOutSupabase } from "@/lib/supabase";
 
 export default function SettingsPage() {
   const { open } = useSidebar();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data - these would come from your API/auth state
-  const userData = {
-    email: "email@kooya.ph",
-    accountId: "XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX",
-    plan: "Agency",
+  const [userData, setUserData] = useState({
+    email: "",
+    accountId: "",
+    name: "",
+    plan: "Free",
     monthlyUsage: 0,
-    monthlyLimit: Infinity,
-    remainingAds: "Unlimited ads",
+    monthlyLimit: 10,
+    remainingAds: "10 ads",
+  });
+
+  useEffect(() => {
+    // Load user data from localStorage or API
+    const loadUserData = async () => {
+      const user = api.getUser();
+      
+      if (user) {
+        setUserData((prev) => ({
+          ...prev,
+          email: user.email,
+          accountId: user.id,
+          name: user.name,
+        }));
+      } else {
+        // If no user in localStorage, try fetching from API
+        const response = await api.getCurrentUser();
+        if (response.success && response.data?.user) {
+          setUserData((prev) => ({
+            ...prev,
+            email: response.data!.user.email,
+            accountId: response.data!.user.id,
+            name: response.data!.user.name,
+          }));
+        } else {
+          // Not authenticated, redirect to login
+          router.push("/login");
+        }
+      }
+      setIsLoading(false);
+    };
+
+    loadUserData();
+  }, [router]);
+
+  const handleSignOut = async () => {
+    // Sign out from both Supabase and local storage
+    await signOutSupabase();
+    api.logout();
+    router.push("/login");
   };
 
-  const handleSignOut = () => {
-    // TODO: Implement sign out logic
-    console.log("Signing out...");
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-zinc-400">
+          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          Loading settings...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
