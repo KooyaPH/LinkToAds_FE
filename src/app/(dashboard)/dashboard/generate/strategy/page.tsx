@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-
-const steps = [
-  { number: 1, label: "URL" },
-  { number: 2, label: "Strategy" },
-  { number: 3, label: "Banners" },
-  { number: 4, label: "Results" },
-];
+import { useRouter } from "next/navigation";
+import { 
+  steps, 
+  adOptions, 
+  bannerSizes, 
+  archetypeCategories, 
+  quickFilters,
+  quickFilterSelections
+} from "@/lib/generateConstants";
 
 // Mock data - would come from API/auth state
 const planData = {
@@ -17,151 +19,180 @@ const planData = {
   limit: 200,
 };
 
-const adOptions = [
-  { value: 3, label: "Quick test", badge: null as string | null },
-  { value: 5, label: "Best", badge: null as string | null },
-  { value: 8, label: "More variety", badge: null as string | null },
-  { value: 10, label: "Maximum", badge: null as string | null },
-  { value: 20, label: "Pro", badge: "PRO" as string | null },
-];
-
-const bannerSizes = [
-  { 
-    id: "square", 
-    name: "Square", 
-    dimensions: "1080×1080", 
-    description: "Feed, Carousel",
-    icon: "M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0 0v-560 560Z"
-  },
-  { 
-    id: "portrait", 
-    name: "Portrait", 
-    dimensions: "1080×1350", 
-    description: "Feed (optimal)",
-    icon: "M720-80H240q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h480q33 0 56.5 23.5T800-800v640q0 33-23.5 56.5T720-80Zm-480-80h480v-640H240v640Zm0 0v-640 640Z"
-  },
-  { 
-    id: "story", 
-    name: "Story", 
-    dimensions: "1080x1920", 
-    description: "Stories, Reels",
-    icon: "M280-40q-33 0-56.5-23.5T200-120v-720q0-33 23.5-56.5T280-920h400q33 0 56.5 23.5T760-840v124q18 7 29 22t11 34v80q0 19-11 34t-29 22v404q0 33-23.5 56.5T680-40H280Zm0-80h400v-720H280v720Zm0 0v-720 720Zm120-40h160q17 0 28.5-11.5T600-200q0-17-11.5-28.5T560-240H400q-17 0-28.5 11.5T360-200q0 17 11.5 28.5T400-160Z"
-  },
-  { 
-    id: "landscape", 
-    name: "Landscape", 
-    dimensions: "1200×628", 
-    description: "Link ads",
-    icon: "M200-280q-33 0-56.5-23.5T120-360v-240q0-33 23.5-56.5T200-680h560q33 0 56.5 23.5T840-600v240q0 33-23.5 56.5T760-280H200Zm0-80h560v-240H200v240Zm0 0v-240 240Z"
-  },
-];
-
-interface Archetype {
-  id: string;
-  name: string;
+interface ExtractedData {
+  url: string;
+  title: string;
   description: string;
-  icon: string;
-  category: string;
+  headings: Array<{ tag: string; text: string }>;
+  paragraphs: string[];
+  images: Array<{ src: string; alt: string; type: string }>;
+  logo: string | null;
+  favicon: string | null;
+  ctas: string[];
+  keywords: string[];
+  productInfo: {
+    productName: string;
+    industry: string;
+    tagline: string;
+  };
+  pricing: {
+    currentPrice: string;
+    originalPrice: string;
+    discount: string;
+    couponCode: string;
+    activeOffer: string;
+    urgencyText: string;
+  };
+  socialProof: {
+    rating: string;
+    reviewCount: string;
+    customers: string;
+  };
+  keyFeatures: string[];
+  testimonials: Array<{
+    quote: string;
+    author: string;
+    title?: string;
+  }>;
+  trustSignals: string[];
+  aiInsights: {
+    uniqueSellingProposition: string;
+    targetAudience: string;
+    currentOffer: string;
+    brandToneAndVoice: string;
+  };
+  extractedAt: string;
 }
 
-const archetypeCategories = [
-  {
-    name: "NATIVE/ORGANIC",
-    archetypes: [
-      { id: "lofi", name: "Lo-Fi", description: "iPhone-style casual shot", icon: "M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7.01 5 5 7.01 5 9.5S7.01 14 9.5 14 14 11.99 14 9.5 11.99 5 9.5 5z" },
-      { id: "ugc", name: "UGC", description: "TikTok creator review style", icon: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" },
-      { id: "meme", name: "Meme", description: "Organic meme format", icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" },
-      { id: "messages", name: "Messages", description: "iMessage conversation", icon: "M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" },
-    ],
-  },
-  {
-    name: "SOCIAL PROOF",
-    archetypes: [
-      { id: "5star", name: "5-Star", description: "Gold star testimonial", icon: "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" },
-      { id: "quote", name: "Quote", description: "Customer quote + photo", icon: "M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" },
-      { id: "comments", name: "Comments", description: "Social comments praising product", icon: "M21.99 4c0-1.1-.89-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" },
-      { id: "stats", name: "Stats", description: "Giant statistic focal point", icon: "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" },
-    ],
-  },
-  {
-    name: "URGENCY/SALES",
-    archetypes: [
-      { id: "price", name: "Price", description: "Crossed-out price + discount", icon: "M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" },
-      { id: "timer", name: "Timer", description: "Limited time countdown", icon: "M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z" },
-      { id: "airdrop", name: "AirDrop", description: "iOS notification popup", icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" },
-      { id: "notify", name: "Notify", description: "Lock screen notification", icon: "M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" },
-    ],
-  },
-  {
-    name: "EDUCATIONAL",
-    archetypes: [
-      { id: "listicle", name: "Listicle", description: "Numbered benefits list", icon: "M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zm0-8h14V7H7v2z" },
-      { id: "grid", name: "Grid", description: "3-4 benefits in grid", icon: "M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" },
-      { id: "split", name: "Split", description: "Before vs After", icon: "M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7.01 5 5 7.01 5 9.5S7.01 14 9.5 14 14 11.99 14 9.5 11.99 5 9.5 5z" },
-      { id: "compare", name: "Compare", description: "Competitor comparison", icon: "M9.01 14H2v2h7.01v3L13 15l-3.99-4v3zm5.98-1v-3H22v-2h-7.01V5L13 9l3.99 4z" },
-    ],
-  },
-  {
-    name: "PRODUCT FOCUS",
-    archetypes: [
-      { id: "lifestyle", name: "Lifestyle", description: "Product in real-world use", icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" },
-      { id: "unbox", name: "Unbox", description: "Package opening moment", icon: "M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z" },
-      { id: "app", name: "App", description: "App-style rating card", icon: "M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z" },
-      { id: "minimal", name: "Minimal", description: "Clean, 80% whitespace", icon: "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" },
-    ],
-  },
-];
-
-const quickFilters = ["Ecommerce", "Saas", "Services", "Restaurant"];
-
 export default function StrategyPage() {
+  const router = useRouter();
   const [currentStep] = useState(2);
   const [selectedAds, setSelectedAds] = useState<number>(5);
   const [selectedBannerSizes, setSelectedBannerSizes] = useState<string[]>(["square"]);
   const [selectedArchetypes, setSelectedArchetypes] = useState<string[]>(["lofi", "5star", "lifestyle"]);
   const [selectedProductPhoto, setSelectedProductPhoto] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   // AI-Extracted Insights state
   const [productInfo, setProductInfo] = useState({
-    productName: "Affordable Memorial Plans",
-    industry: "DeathCare Services",
-    tagline: "Check out our Affordable Life Plans in the Philippines, available now from our St Peter Online Store.",
+    productName: "",
+    industry: "",
+    tagline: "",
   });
   
   const [pricing, setPricing] = useState({
-    currentPrice: "₱ 3,00",
-    originalPrice: "₱ 2,37",
-    discount: "10% discount",
-    couponCode: "SAVE20",
-    activeOffer: "Free shipping over $50",
-    urgencyText: "Ends tonight!",
+    currentPrice: "",
+    originalPrice: "",
+    discount: "",
+    couponCode: "",
+    activeOffer: "",
+    urgencyText: "",
   });
   
   const [socialProof, setSocialProof] = useState({
-    rating: "4.8/5",
-    reviewCount: "2,500+",
-    customers: "50,000+",
+    rating: "",
+    reviewCount: "",
+    customers: "",
   });
   
-  const [keyFeatures, setKeyFeatures] = useState<string[]>([
-    "Traditional Plans",
-    "Cremation Plans",
-    "Online Payment for Plans",
-    "Online Claim Application",
-  ]);
-  
-  const [testimonials, setTestimonials] = useState<string[]>([]);
-  
-  const [trustSignals, setTrustSignals] = useState<string[]>([
-    "Established in 1970, it has maintained its leadership and excelled in its role as DeathCare Experts in the DeathCare Services Industry.",
-  ]);
-  
-  const [ctas, setCtas] = useState<string[]>([
-    "Sign Up",
-    "Signup",
-    "Learn More",
-    "Buy Now",
-  ]);
+  const [keyFeatures, setKeyFeatures] = useState<string[]>([]);
+  const [testimonials, setTestimonials] = useState<Array<{
+    quote: string;
+    author: string;
+    title?: string;
+  }>>([]);
+  const [trustSignals, setTrustSignals] = useState<string[]>([]);
+  const [ctas, setCtas] = useState<string[]>([]);
+  const [aiInsights, setAiInsights] = useState({
+    uniqueSellingProposition: "",
+    targetAudience: "",
+    currentOffer: "",
+    brandToneAndVoice: "",
+  });
+  const [extractedImages, setExtractedImages] = useState<Array<{ src: string; alt: string; type: string }>>([]);
+  const [extractedLogo, setExtractedLogo] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+
+  // Load extracted data from localStorage on mount
+  useEffect(() => {
+    const loadExtractedData = () => {
+      try {
+        const storedData = localStorage.getItem('extractedData');
+        if (storedData) {
+          const data: ExtractedData = JSON.parse(storedData);
+          
+          // Update all state with extracted data
+          if (data.productInfo) {
+            setProductInfo(data.productInfo);
+          }
+          if (data.pricing) {
+            setPricing(data.pricing);
+          }
+          if (data.socialProof) {
+            setSocialProof(data.socialProof);
+          }
+          if (data.keyFeatures) {
+            setKeyFeatures(data.keyFeatures);
+          }
+          if (data.testimonials) {
+            // Convert string testimonials to structured format if needed
+            if (Array.isArray(data.testimonials) && data.testimonials.length > 0) {
+              const structuredTestimonials = data.testimonials.map((t: string | { quote: string; author: string; title?: string }) => {
+                if (typeof t === 'string') {
+                  return { quote: t, author: '', title: '' };
+                }
+                return t;
+              });
+              setTestimonials(structuredTestimonials);
+            }
+          }
+          if (data.trustSignals) {
+            setTrustSignals(data.trustSignals);
+          }
+          if (data.ctas) {
+            setCtas(data.ctas);
+          }
+          if (data.aiInsights) {
+            setAiInsights(data.aiInsights);
+          }
+          if (data.images) {
+            setExtractedImages(data.images);
+          }
+          if (data.logo) {
+            setExtractedLogo(data.logo);
+          }
+          
+          setIsLoading(false);
+        } else {
+          // No data found, redirect back to generate page
+          console.warn("No extracted data found. Redirecting to generate page.");
+          router.push("/dashboard/generate");
+        }
+      } catch (error) {
+        console.error("Error loading extracted data:", error);
+        setIsLoading(false);
+        router.push("/dashboard/generate");
+      }
+    };
+
+    loadExtractedData();
+  }, [router]);
+
+  // Show loading state while data is being loaded
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <div className="text-center">
+          <svg className="h-8 w-8 animate-spin text-[#6a4cff] mx-auto mb-4" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <p className="text-sm text-zinc-400">Loading extracted data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -453,6 +484,10 @@ export default function StrategyPage() {
                   <button
                     key={filter}
                     type="button"
+                    onClick={() => {
+                      const predefinedSelection = quickFilterSelections[filter] || [];
+                      setSelectedArchetypes(predefinedSelection);
+                    }}
                     className="px-3 py-1.5 rounded-lg border border-[#141533] bg-[#0d1117] text-xs text-white hover:border-[#312e81] hover:bg-[#11111c] transition-all"
                   >
                     {filter}
@@ -642,20 +677,31 @@ export default function StrategyPage() {
                 </div>
 
                 {/* Found on website */}
-                <div className="mb-4">
-                  <h4 className="text-xs text-zinc-400 mb-2">Found on website</h4>
-                  <div className="flex items-center gap-3 p-3 rounded-lg border border-[#141533] bg-[#0a0a12]">
-                    <div className="h-12 w-12 rounded bg-gradient-to-br from-green-500 to-yellow-500 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-bold text-lg">S</span>
+                {extractedLogo && (
+                  <div className="mb-4">
+                    <h4 className="text-xs text-zinc-400 mb-2">Found on website</h4>
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-[#141533] bg-[#0a0a12]">
+                      <div className="h-12 w-12 rounded bg-gradient-to-br from-green-500 to-yellow-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {!logoError ? (
+                          <img 
+                            src={extractedLogo} 
+                            alt="Website logo" 
+                            className="h-full w-full object-contain"
+                            onError={() => setLogoError(true)}
+                          />
+                        ) : (
+                          <span className="text-white font-bold text-lg">L</span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="text-xs text-[#6a4cff] hover:text-[#8a6cff] transition-colors"
+                      >
+                        Use this logo
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      className="text-xs text-[#6a4cff] hover:text-[#8a6cff] transition-colors"
-                    >
-                      Use this logo
-                    </button>
                   </div>
-                </div>
+                )}
 
                 {/* Description */}
                 <p className="text-xs text-zinc-400">
@@ -710,88 +756,99 @@ export default function StrategyPage() {
                 </div>
 
                 {/* Found on website */}
-                <div className="mb-4">
-                  <h4 className="text-xs text-zinc-400 mb-2">Found on website</h4>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[1, 2, 3, 4].map((index) => {
-                      const isSelected = selectedProductPhoto === index;
-                      const shouldShow = selectedProductPhoto === null || isSelected;
-                      
-                      if (!shouldShow) return null;
-                      
-                      return (
-                        <div
-                          key={index}
-                          className="group relative"
-                        >
+                {extractedImages.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-xs text-zinc-400 mb-2">Found on website</h4>
+                    <div className="grid grid-cols-4 gap-2">
+                      {extractedImages.slice(0, 4).map((image, index) => {
+                        const isSelected = selectedProductPhoto === index;
+                        const shouldShow = selectedProductPhoto === null || isSelected;
+                        
+                        if (!shouldShow) return null;
+                        
+                        return (
                           <div
-                            className={`relative aspect-square rounded-lg border bg-[#0a0a12] overflow-hidden cursor-pointer transition-all ${
-                              isSelected
-                                ? "border-[#6a4cff] border-2"
-                                : "border-[#141533] hover:border-[#6a4cff] hover:border-2"
-                            }`}
-                            onClick={() => setSelectedProductPhoto(isSelected ? null : index)}
+                            key={index}
+                            className="group relative"
                           >
-                            <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                              <svg
-                                className="h-6 w-6 text-zinc-500"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            <div
+                              className={`relative aspect-square rounded-lg border bg-[#0a0a12] overflow-hidden cursor-pointer transition-all ${
+                                isSelected
+                                  ? "border-[#6a4cff] border-2"
+                                  : "border-[#141533] hover:border-[#6a4cff] hover:border-2"
+                              }`}
+                              onClick={() => setSelectedProductPhoto(isSelected ? null : index)}
+                            >
+                              {!imageErrors.has(index) ? (
+                                <img
+                                  src={image.src}
+                                  alt={image.alt || `Product image ${index + 1}`}
+                                  className="w-full h-full object-cover"
+                                  onError={() => setImageErrors(prev => new Set(prev).add(index))}
                                 />
-                              </svg>
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+                                  <svg
+                                    className="h-6 w-6 text-zinc-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                </div>
+                              )}
+                              {/* Hover Overlay */}
+                              {!isSelected && (
+                                <div className="absolute inset-0 bg-[#6a4cff]/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedProductPhoto(index);
+                                    }}
+                                    className="px-4 py-2 rounded-lg bg-[#6a4cff] text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#7a5cff]"
+                                  >
+                                    Use
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                            {/* Hover Overlay */}
-                            {!isSelected && (
-                              <div className="absolute inset-0 bg-[#6a4cff]/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedProductPhoto(index);
-                                  }}
-                                  className="px-4 py-2 rounded-lg bg-[#6a4cff] text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#7a5cff]"
+                            {/* Selected State - Red X on Hover (Outside the card) */}
+                            {isSelected && (
+                              <div 
+                                className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10 shadow-lg"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedProductPhoto(null);
+                                }}
+                              >
+                                <svg
+                                  className="h-4 w-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
                                 >
-                                  Use
-                                </button>
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={3}
+                                    d="M6 18L18 6M6 6l12 12"
+                                  />
+                                </svg>
                               </div>
                             )}
                           </div>
-                          {/* Selected State - Red X on Hover (Outside the card) */}
-                          {isSelected && (
-                            <div 
-                              className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10 shadow-lg"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedProductPhoto(null);
-                              }}
-                            >
-                              <svg
-                                className="h-4 w-4 text-white"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={3}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Description */}
                 <p className="text-xs text-zinc-400">
@@ -1090,9 +1147,16 @@ export default function StrategyPage() {
               <div className="space-y-2">
                 {keyFeatures.map((feature, index) => (
                   <div key={index} className="group relative flex items-center">
-                    <div className="flex-1 rounded-lg border border-[#141533] bg-[#0a0a12] px-3 py-2">
-                      <span className="text-sm text-white">{feature}</span>
-                    </div>
+                    <input
+                      type="text"
+                      value={feature}
+                      onChange={(e) => {
+                        const updated = [...keyFeatures];
+                        updated[index] = e.target.value;
+                        setKeyFeatures(updated);
+                      }}
+                      className="flex-1 rounded-lg border border-[#141533] bg-[#0a0a12] px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6a4cff] transition-colors"
+                    />
                     <button
                       type="button"
                       onClick={() => {
@@ -1141,14 +1205,15 @@ export default function StrategyPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    const newTestimonial = prompt("Enter a new testimonial:");
-                    if (newTestimonial) {
-                      setTestimonials([...testimonials, newTestimonial]);
-                    }
+                    setTestimonials([
+                      ...testimonials,
+                      { quote: "", author: "", title: "" }
+                    ]);
                   }}
-                  className="text-xs text-[#6a4cff] hover:text-[#8a6cff] transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-[#6a4cff] hover:text-[#8a6cff] transition-colors"
                 >
-                  + Add
+                  <span className="text-[#6a4cff] text-xs">+</span>
+                  <span>Add</span>
                 </button>
               </div>
               {testimonials.length === 0 ? (
@@ -1156,33 +1221,73 @@ export default function StrategyPage() {
                   No testimonials extracted. Click "Add" to add manually.
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-4">
                   {testimonials.map((testimonial, index) => (
-                    <div key={index} className="group relative flex items-center">
-                      <div className="flex-1 rounded-lg border border-[#141533] bg-[#0a0a12] px-3 py-2">
-                        <span className="text-sm text-white">{testimonial}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTestimonials(testimonials.filter((_, i) => i !== index));
-                        }}
-                        className="ml-2 h-5 w-5 rounded-full bg-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      >
-                        <svg
-                          className="h-3 w-3 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                    <div key={index} className="relative rounded-lg border border-[#141533] bg-[#0a0a12] p-4">
+                      {/* Quote Header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm font-medium text-white">Quote #{index + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTestimonials(testimonials.filter((_, i) => i !== index));
+                          }}
+                          className="h-5 w-5 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={3}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      {/* Customer Testimonial Textarea */}
+                      <textarea
+                        value={testimonial.quote}
+                        onChange={(e) => {
+                          const updated = [...testimonials];
+                          updated[index] = { ...updated[index], quote: e.target.value };
+                          setTestimonials(updated);
+                        }}
+                        placeholder="Customer testimonial..."
+                        className="w-full rounded-lg border border-[#141533] bg-[#0d1117] px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#6a4cff] transition-colors resize-none"
+                        rows={4}
+                      />
+                      
+                      {/* Author and Title Inputs */}
+                      <div className="grid grid-cols-2 gap-3 mt-3">
+                        <input
+                          type="text"
+                          value={testimonial.author}
+                          onChange={(e) => {
+                            const updated = [...testimonials];
+                            updated[index] = { ...updated[index], author: e.target.value };
+                            setTestimonials(updated);
+                          }}
+                          placeholder="Author name"
+                          className="rounded-lg border border-[#141533] bg-[#0d1117] px-4 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#6a4cff] transition-colors"
+                        />
+                        <input
+                          type="text"
+                          value={testimonial.title || ""}
+                          onChange={(e) => {
+                            const updated = [...testimonials];
+                            updated[index] = { ...updated[index], title: e.target.value };
+                            setTestimonials(updated);
+                          }}
+                          placeholder="Title (optional)"
+                          className="rounded-lg border border-[#141533] bg-[#0d1117] px-4 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#6a4cff] transition-colors"
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1191,52 +1296,81 @@ export default function StrategyPage() {
 
             {/* Trust Signals Section */}
             <div className="mt-6 pt-6 border-t border-[#141533]">
-              <div className="flex items-center gap-2 mb-4">
-                <svg
-                  className="h-4 w-4 text-green-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="h-4 w-4 text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                  <h3 className="text-sm font-semibold text-white">Trust Signals</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTrustSignals([...trustSignals, ""]);
+                  }}
+                  className="text-xs text-[#6a4cff] hover:text-[#8a6cff] transition-colors"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-                <h3 className="text-sm font-semibold text-white">Trust Signals</h3>
+                  + Add
+                </button>
               </div>
-              <div className="space-y-2">
-                {trustSignals.map((signal, index) => (
-                  <div key={index} className="group relative flex items-center">
-                    <div className="flex-1 rounded-lg border border-[#141533] bg-[#0a0a12] px-3 py-2">
-                      <span className="text-sm text-white">{signal}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTrustSignals(trustSignals.filter((_, i) => i !== index));
-                      }}
-                      className="ml-2 h-5 w-5 rounded-full bg-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              {trustSignals.length === 0 ? (
+                <p className="text-xs text-zinc-400">
+                  No trust signals extracted. Click "Add" to add manually.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {trustSignals.map((signal, index) => (
+                    <div
+                      key={index}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#10192d] px-3 py-1.5"
                     >
-                      <svg
-                        className="h-3 w-3 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                      <input
+                        type="text"
+                        value={signal}
+                        onChange={(e) => {
+                          const updated = [...trustSignals];
+                          updated[index] = e.target.value;
+                          setTrustSignals(updated);
+                        }}
+                        placeholder="Trust signal..."
+                        className="bg-transparent border-none outline-none text-xs text-white min-w-[60px] focus:outline-none placeholder:text-zinc-500"
+                        style={{ width: `${Math.max((signal.length || 15) * 6 + 20, 70)}px` }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTrustSignals(trustSignals.filter((_, i) => i !== index));
+                        }}
+                        className="flex items-center justify-center text-white hover:text-zinc-300 transition-colors cursor-pointer flex-shrink-0"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={3}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
+                        <svg
+                          className="h-3 w-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* CTAs Found Section */}
@@ -1262,7 +1396,11 @@ export default function StrategyPage() {
                   <button
                     key={index}
                     type="button"
-                    className="rounded-lg border border-[#141533] bg-[#0a0a12] px-4 py-2 text-sm text-white hover:border-[#6a4cff] transition-colors"
+                    className="rounded-full border border-[#6a4cff]/30 bg-[#0a0a12] px-3 py-1.5 text-xs text-white hover:border-[#6a4cff]/50 transition-all shadow-sm"
+                    style={{
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
+                      boxShadow: '0 0 0 1px rgba(106, 76, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                    }}
                   >
                     {cta}
                   </button>
@@ -1290,57 +1428,147 @@ export default function StrategyPage() {
             {/* Content Sections */}
             <div className="space-y-4">
               {/* Unique Selling Proposition */}
-              <div>
-                <h3 className="text-sm font-medium text-white mb-2">
-                  Unique Selling Proposition (USP)
-                </h3>
-                <div className="rounded-lg border border-[#141533] bg-[#0a0a12] p-4">
-                  <p className="text-sm text-white leading-relaxed">
-                    St. Peter Life Plan offers affordable, anti-inflationary pre-need memorial plans (Traditional and Cremation) online, guaranteeing peace of mind and convenience for Filipino families.
-                  </p>
+              {aiInsights.uniqueSellingProposition && (
+                <div>
+                  <h3 className="text-sm font-medium text-white mb-2">
+                    Unique Selling Proposition (USP)
+                  </h3>
+                  <textarea
+                    value={aiInsights.uniqueSellingProposition}
+                    onChange={(e) => {
+                      setAiInsights({
+                        ...aiInsights,
+                        uniqueSellingProposition: e.target.value,
+                      });
+                    }}
+                    className="w-full rounded-lg border border-[#141533] bg-[#0a0a12] p-4 text-sm text-white leading-relaxed focus:outline-none focus:border-[#6a4cff] transition-colors resize-none min-h-[80px]"
+                    rows={4}
+                  />
                 </div>
-              </div>
+              )}
 
               {/* Target Audience and Current Offer - Side by Side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Target Audience */}
-                <div>
-                  <h3 className="text-sm font-medium text-white mb-2">
-                    Target Audience
-                  </h3>
-                  <div className="rounded-lg border border-[#141533] bg-[#0a0a12] p-4">
-                    <p className="text-sm text-white leading-relaxed">
-                      Filipino adults, particularly heads of households or those responsible for family planning, who are pragmatic, financially conscious, and seeking a reliable solution for their family's future needs.
-                    </p>
+                {aiInsights.targetAudience && (
+                  <div className="flex flex-col">
+                    <h3 className="text-sm font-medium text-white mb-2">
+                      Target Audience
+                    </h3>
+                    <textarea
+                      value={aiInsights.targetAudience}
+                      onChange={(e) => {
+                        setAiInsights({
+                          ...aiInsights,
+                          targetAudience: e.target.value,
+                        });
+                      }}
+                      className="w-full rounded-lg border border-[#141533] bg-[#0a0a12] p-4 text-sm text-white leading-relaxed focus:outline-none focus:border-[#6a4cff] transition-colors resize-none h-32 overflow-y-auto scrollbar-hide"
+                      rows={4}
+                    />
                   </div>
-                </div>
+                )}
 
                 {/* Current Offer */}
-                <div>
-                  <h3 className="text-sm font-medium text-white mb-2">
-                    Current Offer
-                  </h3>
-                  <div className="rounded-lg border border-[#141533] bg-[#0a0a12] p-4">
-                    <p className="text-sm text-white leading-relaxed">
-                      Online purchase of Traditional and Cremation Plans, online payment, and claims application.
-                    </p>
+                {aiInsights.currentOffer && (
+                  <div className="flex flex-col">
+                    <h3 className="text-sm font-medium text-white mb-2">
+                      Current Offer
+                    </h3>
+                    <textarea
+                      value={aiInsights.currentOffer}
+                      onChange={(e) => {
+                        setAiInsights({
+                          ...aiInsights,
+                          currentOffer: e.target.value,
+                        });
+                      }}
+                      className="w-full rounded-lg border border-[#141533] bg-[#0a0a12] p-4 text-sm text-white leading-relaxed focus:outline-none focus:border-[#6a4cff] transition-colors resize-none h-32 overflow-y-auto scrollbar-hide"
+                      rows={4}
+                    />
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Brand Tone & Voice */}
-              <div>
-                <h3 className="text-sm font-medium text-white mb-2">
-                  Brand Tone & Voice
-                </h3>
+              {aiInsights.brandToneAndVoice && (
+                <div>
+                  <h3 className="text-sm font-medium text-white mb-2">
+                    Brand Tone & Voice
+                  </h3>
+                  <textarea
+                    value={aiInsights.brandToneAndVoice}
+                    onChange={(e) => {
+                      setAiInsights({
+                        ...aiInsights,
+                        brandToneAndVoice: e.target.value,
+                      });
+                    }}
+                    className="w-full rounded-lg border border-[#141533] bg-[#0a0a12] p-4 text-sm text-white leading-relaxed focus:outline-none focus:border-[#6a4cff] transition-colors resize-none min-h-[80px]"
+                    rows={4}
+                  />
+                </div>
+              )}
+
+              {/* Show message if no AI insights available */}
+              {!aiInsights.uniqueSellingProposition && 
+               !aiInsights.targetAudience && 
+               !aiInsights.currentOffer && 
+               !aiInsights.brandToneAndVoice && (
                 <div className="rounded-lg border border-[#141533] bg-[#0a0a12] p-4">
-                  <p className="text-sm text-white leading-relaxed">
-                    Trustworthy, caring, professional, and empathetic, with an emphasis on convenience and peace of mind.
+                  <p className="text-sm text-zinc-400 text-center">
+                    AI insights are being generated. Please check back shortly.
                   </p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
+
+          {/* Navigation Buttons */}
+          <div className="w-full max-w-3xl mt-8 flex items-center justify-between">
+            {/* Back Button */}
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 rounded-lg border border-zinc-700/50 bg-[#0d1117] px-6 py-3 text-white transition-all hover:border-zinc-600 hover:bg-[#12121a]"
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              <span>Back</span>
+            </button>
+
+            {/* Generate 3 Ads Button */}
+            <button
+              onClick={() => router.push('/dashboard/generate/banners')}
+              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-6 py-3 text-white font-medium transition-all hover:from-[#9333ea] hover:to-[#db2777] shadow-lg shadow-purple-500/20"
+            >
+              <span>Generate 3 Ads</span>
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+
 
 
         </section>

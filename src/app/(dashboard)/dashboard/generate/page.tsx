@@ -3,15 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { steps } from "@/lib/generateConstants";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-const steps = [
-  { number: 1, label: "URL" },
-  { number: 2, label: "Strategy" },
-  { number: 3, label: "Banners" },
-  { number: 4, label: "Results" },
-];
 
 interface ExtractedImage {
   src: string;
@@ -35,6 +29,33 @@ interface ExtractedData {
   favicon: string | null;
   ctas: string[];
   keywords: string[];
+  productInfo: {
+    productName: string;
+    industry: string;
+    tagline: string;
+  };
+  pricing: {
+    currentPrice: string;
+    originalPrice: string;
+    discount: string;
+    couponCode: string;
+    activeOffer: string;
+    urgencyText: string;
+  };
+  socialProof: {
+    rating: string;
+    reviewCount: string;
+    customers: string;
+  };
+  keyFeatures: string[];
+  testimonials: string[];
+  trustSignals: string[];
+  aiInsights: {
+    uniqueSellingProposition: string;
+    targetAudience: string;
+    currentOffer: string;
+    brandToneAndVoice: string;
+  };
   extractedAt: string;
 }
 
@@ -174,6 +195,9 @@ export default function GeneratePage() {
         console.log("🎯 CTAs:", data.ctas);
         console.log("🔑 Keywords:", data.keywords);
         console.log("📊 Full extracted data:", data);
+        
+        // Store extracted data in localStorage for the strategy page
+        localStorage.setItem('extractedData', JSON.stringify(data));
         
         // Ensure progress completes
         setProgressStep(3);
