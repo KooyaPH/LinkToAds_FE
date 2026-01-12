@@ -179,6 +179,55 @@ export default function StrategyPage() {
     loadExtractedData();
   }, [router]);
 
+  // Load selected banners count from localStorage and update selectedAds
+  useEffect(() => {
+    const updateSelectedAdsFromBanners = () => {
+      const savedCount = localStorage.getItem('selectedBannersCount');
+      if (savedCount) {
+        const count = parseInt(savedCount, 10);
+        if (!isNaN(count) && count > 0) {
+          // Find the closest matching ad option value
+          const matchingOption = adOptions.find(option => option.value === count);
+          if (matchingOption) {
+            setSelectedAds(count);
+          } else {
+            // If exact match not found, find the closest option
+            const closestOption = adOptions.reduce((prev, curr) => {
+              return Math.abs(curr.value - count) < Math.abs(prev.value - count) ? curr : prev;
+            });
+            // Update to closest option (minimum is 3, so counts less than 3 will map to 3)
+            setSelectedAds(closestOption.value);
+          }
+        }
+      }
+    };
+
+    // Update on mount
+    updateSelectedAdsFromBanners();
+
+    // Listen for storage changes (when banners are selected in another tab/page)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'selectedBannersCount') {
+        updateSelectedAdsFromBanners();
+      }
+    };
+
+    // Listen for page visibility changes (when user navigates back to this page)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        updateSelectedAdsFromBanners();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   // Show loading state while data is being loaded
   if (isLoading) {
     return (

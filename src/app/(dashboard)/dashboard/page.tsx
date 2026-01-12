@@ -42,7 +42,10 @@ export default function DashboardPage() {
               Generate professional ad creatives in seconds.
             </p>
           </div>
-          <button className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
+          <Link
+            href="/dashboard/generate"
+            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
+          >
             <svg
               className="h-4 w-4"
               fill="none"
@@ -57,7 +60,7 @@ export default function DashboardPage() {
               />
             </svg>
             New Campaign
-          </button>
+          </Link>
         </div>
 
         {/* Stats Cards */}
@@ -169,7 +172,10 @@ export default function DashboardPage() {
             <p className="mb-4 text-zinc-400">
               No campaigns yet. Create your first one!
             </p>
-            <button className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
+            <Link
+              href="/dashboard/generate"
+              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
+            >
               <svg
                 className="h-4 w-4"
                 fill="none"
@@ -184,7 +190,7 @@ export default function DashboardPage() {
                 />
               </svg>
               Create Campaign
-            </button>
+            </Link>
           </div>
         </div>
 

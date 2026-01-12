@@ -3,7 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useSidebar } from "./SidebarContext";
+import { api } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 
 type NavItem = {
   href: string;
@@ -63,6 +66,47 @@ const navItems: NavItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { isOpen, close } = useSidebar();
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    const fetchUserEmail = async () => {
+      // Try to get user from localStorage (API auth)
+      const user = api.getUser();
+      if (user?.email) {
+        setUserEmail(user.email);
+        return;
+      }
+
+      // Fallback to Supabase session
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) {
+          setUserEmail(session.user.email);
+        }
+      } catch (error) {
+        console.error("Error fetching user email:", error);
+      }
+    };
+
+    fetchUserEmail();
+
+    // Listen for auth state changes (Supabase)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.email) {
+        setUserEmail(session.user.email);
+      } else {
+        // If Supabase session is cleared, check localStorage
+        const user = api.getUser();
+        setUserEmail(user?.email || "");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <>
@@ -117,12 +161,21 @@ export default function Sidebar() {
 
       {/* New Campaign Button */}
       <div className="p-6">
-        <button className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-4 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
+        <Link
+          href="/dashboard/generate"
+          onClick={() => {
+            // Close sidebar on mobile when link is clicked
+            if (window.innerWidth < 1024) {
+              close();
+            }
+          }}
+          className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-4 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
+        >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           New Campaign
-        </button>
+        </Link>
       </div>
 
       {/* Navigation Links */}
@@ -166,7 +219,9 @@ export default function Sidebar() {
           <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          <span className="text-sm text-white">email@kooya.ph</span>
+          <span className="text-sm text-white truncate">
+            {userEmail || "Loading..."}
+          </span>
         </div>
         <Link
           href="/login"

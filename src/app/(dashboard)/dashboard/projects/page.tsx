@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSidebar } from "@/components/Sidebar/SidebarContext";
 
 export default function ProjectsPage() {
@@ -36,7 +37,10 @@ export default function ProjectsPage() {
         {/* My Projects Section */}
         <div className="mb-8 flex items-start justify-between">
           <h2 className="text-2xl font-bold text-white">My Projects</h2>
-          <button className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
+          <Link
+            href="/dashboard/generate"
+            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
+          >
             <svg
               className="h-4 w-4"
               fill="none"
@@ -51,7 +55,7 @@ export default function ProjectsPage() {
               />
             </svg>
             New Campaign
-          </button>
+          </Link>
         </div>
 
         {/* Empty State Card */}
@@ -75,9 +79,12 @@ export default function ProjectsPage() {
           <p className="mb-6 text-center text-zinc-400">
             Generate your first ad campaign to see it here.
           </p>
-          <button className="rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25">
+          <Link
+            href="/dashboard/generate"
+            className="rounded-lg bg-gradient-to-r from-[#5555DD] to-[#DD55DD] px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
+          >
             Create Campaign
-          </button>
+          </Link>
         </div>
       </main>
     </div>
