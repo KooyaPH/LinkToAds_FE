@@ -3,14 +3,15 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  steps, 
-  adOptions, 
-  bannerSizes, 
-  archetypeCategories, 
+import {
+  steps,
+  adOptions,
+  bannerSizes,
+  archetypeCategories,
   quickFilters,
-  quickFilterSelections
+  quickFilterSelections,
 } from "@/lib/generateConstants";
+import PlanCard from "@/components/PlanCard";
 
 // Mock data - would come from API/auth state
 const planData = {
@@ -72,14 +73,14 @@ export default function StrategyPage() {
   const [selectedArchetypes, setSelectedArchetypes] = useState<string[]>(["lofi", "5star", "lifestyle"]);
   const [selectedProductPhoto, setSelectedProductPhoto] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // AI-Extracted Insights state
   const [productInfo, setProductInfo] = useState({
     productName: "",
     industry: "",
     tagline: "",
   });
-  
+
   const [pricing, setPricing] = useState({
     currentPrice: "",
     originalPrice: "",
@@ -88,13 +89,13 @@ export default function StrategyPage() {
     activeOffer: "",
     urgencyText: "",
   });
-  
+
   const [socialProof, setSocialProof] = useState({
     rating: "",
     reviewCount: "",
     customers: "",
   });
-  
+
   const [keyFeatures, setKeyFeatures] = useState<string[]>([]);
   const [testimonials, setTestimonials] = useState<Array<{
     quote: string;
@@ -121,7 +122,7 @@ export default function StrategyPage() {
         const storedData = localStorage.getItem('extractedData');
         if (storedData) {
           const data: ExtractedData = JSON.parse(storedData);
-          
+
           // Update all state with extracted data
           if (data.productInfo) {
             setProductInfo(data.productInfo);
@@ -162,7 +163,7 @@ export default function StrategyPage() {
           if (data.logo) {
             setExtractedLogo(data.logo);
           }
-          
+
           setIsLoading(false);
         } else {
           // No data found, redirect back to generate page
@@ -271,51 +272,11 @@ export default function StrategyPage() {
       {/* Main Content */}
       <main className="relative px-4 py-6 sm:px-8 sm:py-8 lg:px-16 lg:py-12">
         {/* Plan Card */}
-        <div className="mb-6 flex justify-center lg:justify-end lg:absolute lg:top-8 lg:right-16 lg:mb-0">
-          <div className="rounded-lg border border-[#141533] bg-[#0d1117] px-4 py-3 w-full max-w-xs sm:w-auto">
-            <div className="flex items-center justify-between gap-6 mb-1">
-              <div className="flex items-center gap-1.5">
-                <svg
-                  className="h-4 w-4 text-purple-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                  />
-                </svg>
-                <span className="text-sm font-medium text-white">Plan</span>
-              </div>
-              <span className="rounded-full bg-[#1a1a22] px-3 py-0.5 text-xs font-semibold text-white flex items-center gap-1">
-                {planData.plan}
-                <span className="ml-1 rounded-full bg-[#4c1d95] px-2 py-0.5 text-[10px] font-semibold text-[#c4b5fd]">
-                  Pro
-                </span>
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400">Ads this month</span>
-              <span className="text-white">
-                {planData.adsThisMonth} / {planData.limit}
-              </span>
-            </div>
-            <div className="mt-2 h-1.5 w-full rounded-full bg-[#1a1a22] overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899]"
-                style={{
-                  width: `${Math.min(
-                    (planData.adsThisMonth / planData.limit) * 100,
-                    100
-                  ).toFixed(0)}%`,
-                }}
-              />
-            </div>
-          </div>
-        </div>
+        <PlanCard
+          plan={planData.plan}
+          adsThisMonth={planData.adsThisMonth}
+          limit={planData.limit}
+        />
 
         {/* Stepper */}
         <div className="flex items-center justify-center gap-0 mb-8 sm:mb-12 lg:mb-16">
@@ -323,31 +284,28 @@ export default function StrategyPage() {
             <div key={step.number} className="flex items-center">
               <div className="flex flex-col items-center">
                 <div
-                  className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full text-xs sm:text-sm font-semibold transition-all ${
-                    step.number <= currentStep
+                  className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full text-xs sm:text-sm font-semibold transition-all ${step.number <= currentStep
                       ? "bg-gradient-to-r from-[#6666FF] to-[#FF66FF] text-white"
                       : "border border-[#141533] bg-[#0d1117] text-zinc-400"
-                  }`}
+                    }`}
                 >
                   {step.number}
                 </div>
                 <span
-                  className={`mt-1.5 sm:mt-2 text-[10px] sm:text-xs font-medium hidden sm:block ${
-                    step.number <= currentStep
+                  className={`mt-1.5 sm:mt-2 text-[10px] sm:text-xs font-medium hidden sm:block ${step.number <= currentStep
                       ? "text-white"
                       : "text-zinc-500"
-                  }`}
+                    }`}
                 >
                   {step.label}
                 </span>
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`h-[2px] w-6 sm:w-12 lg:w-16 mx-1 sm:mx-2 sm:mt-[-20px] ${
-                    step.number < currentStep
+                  className={`h-[2px] w-6 sm:w-12 lg:w-16 mx-1 sm:mx-2 sm:mt-[-20px] ${step.number < currentStep
                       ? "bg-gradient-to-r from-[#6666FF] to-[#FF66FF]"
                       : "bg-[#1a1a22]"
-                  }`}
+                    }`}
                 />
               )}
             </div>
@@ -398,11 +356,10 @@ export default function StrategyPage() {
                     key={option.value}
                     type="button"
                     onClick={() => setSelectedAds(option.value)}
-                    className={`relative flex flex-col items-center justify-center rounded-xl border px-3 py-3 sm:px-4 sm:py-4 text-center transition-all ${
-                      isSelected
+                    className={`relative flex flex-col items-center justify-center rounded-xl border px-3 py-3 sm:px-4 sm:py-4 text-center transition-all ${isSelected
                         ? "border-[#6666FF] bg-[#1b1b36] shadow-lg shadow-purple-500/30"
                         : "border-[#141533] bg-[#0a0a12] hover:border-[#312e81] hover:bg-[#11111c]"
-                    }`}
+                      }`}
                   >
                     {option.badge && (
                       <span className="absolute -top-2 right-2 rounded-full bg-[#4c1d95] px-2 py-0.5 text-[10px] font-semibold text-[#c4b5fd]">
@@ -411,9 +368,8 @@ export default function StrategyPage() {
                     )}
                     <div className="flex flex-col items-center justify-center w-full">
                       <span
-                        className={`text-xl sm:text-2xl font-bold ${
-                          isSelected ? "text-white" : "text-zinc-100"
-                        }`}
+                        className={`text-xl sm:text-2xl font-bold ${isSelected ? "text-white" : "text-zinc-100"
+                          }`}
                       >
                         {option.value}
                       </span>
@@ -463,11 +419,10 @@ export default function StrategyPage() {
                         setSelectedBannerSizes([...selectedBannerSizes, banner.id]);
                       }
                     }}
-                    className={`relative flex flex-col items-center justify-center rounded-lg border px-3 py-3 text-center transition-all ${
-                      isSelected
+                    className={`relative flex flex-col items-center justify-center rounded-lg border px-3 py-3 text-center transition-all ${isSelected
                         ? "border-[#a855f7] bg-[#1b1b36] shadow-lg shadow-purple-500/30"
                         : "border-[#141533] bg-[#0d1117] hover:border-[#312e81] hover:bg-[#11111c]"
-                    }`}
+                      }`}
                   >
                     <svg
                       className="h-5 w-5 mb-2"
@@ -477,23 +432,20 @@ export default function StrategyPage() {
                       <path d={banner.icon} />
                     </svg>
                     <span
-                      className={`text-base font-bold mb-0.5 ${
-                        isSelected ? "text-white" : "text-white"
-                      }`}
+                      className={`text-base font-bold mb-0.5 ${isSelected ? "text-white" : "text-white"
+                        }`}
                     >
                       {banner.name}
                     </span>
                     <span
-                      className={`text-xs mb-0.5 ${
-                        isSelected ? "text-white" : "text-white"
-                      }`}
+                      className={`text-xs mb-0.5 ${isSelected ? "text-white" : "text-white"
+                        }`}
                     >
                       {banner.dimensions}
                     </span>
                     <span
-                      className={`text-[10px] ${
-                        isSelected ? "text-white" : "text-zinc-400"
-                      }`}
+                      className={`text-[10px] ${isSelected ? "text-white" : "text-zinc-400"
+                        }`}
                     >
                       {banner.description}
                     </span>
@@ -587,11 +539,10 @@ export default function StrategyPage() {
                               setSelectedArchetypes([...selectedArchetypes, archetype.id]);
                             }
                           }}
-                          className={`relative flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-all ${
-                            isSelected
+                          className={`relative flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-all ${isSelected
                               ? "border-[#6666FF] bg-[#1b1b36] shadow-lg shadow-purple-500/30"
                               : "border-[#141533] bg-[#0d1117] hover:border-[#312e81] hover:bg-[#11111c]"
-                          }`}
+                            }`}
                         >
                           {isSelected && (
                             <div className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-[#6666FF] flex items-center justify-center">
@@ -611,9 +562,8 @@ export default function StrategyPage() {
                             </div>
                           )}
                           <svg
-                            className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
-                              isSelected ? "text-[#6666FF]" : "text-zinc-400"
-                            }`}
+                            className={`h-5 w-5 flex-shrink-0 mt-0.5 ${isSelected ? "text-[#6666FF]" : "text-zinc-400"
+                              }`}
                             fill="currentColor"
                             viewBox="0 0 24 24"
                           >
@@ -621,16 +571,14 @@ export default function StrategyPage() {
                           </svg>
                           <div className="flex flex-col min-w-0">
                             <span
-                              className={`text-xs font-bold mb-0.5 ${
-                                isSelected ? "text-white" : "text-white"
-                              }`}
+                              className={`text-xs font-bold mb-0.5 ${isSelected ? "text-white" : "text-white"
+                                }`}
                             >
                               {archetype.name}
                             </span>
                             <span
-                              className={`text-[9px] leading-tight ${
-                                isSelected ? "text-zinc-300" : "text-zinc-400"
-                              }`}
+                              className={`text-[9px] leading-tight ${isSelected ? "text-zinc-300" : "text-zinc-400"
+                                }`}
                             >
                               {archetype.description}
                             </span>
@@ -732,9 +680,9 @@ export default function StrategyPage() {
                     <div className="flex items-center gap-3 p-3 rounded-lg border border-[#141533] bg-[#0a0a12]">
                       <div className="h-12 w-12 rounded bg-gradient-to-br from-green-500 to-yellow-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {!logoError ? (
-                          <img 
-                            src={extractedLogo} 
-                            alt="Website logo" 
+                          <img
+                            src={extractedLogo}
+                            alt="Website logo"
                             className="h-full w-full object-contain"
                             onError={() => setLogoError(true)}
                           />
@@ -812,20 +760,19 @@ export default function StrategyPage() {
                       {extractedImages.slice(0, 4).map((image, index) => {
                         const isSelected = selectedProductPhoto === index;
                         const shouldShow = selectedProductPhoto === null || isSelected;
-                        
+
                         if (!shouldShow) return null;
-                        
+
                         return (
                           <div
                             key={index}
                             className="group relative"
                           >
                             <div
-                              className={`relative aspect-square rounded-lg border bg-[#0a0a12] overflow-hidden cursor-pointer transition-all ${
-                                isSelected
+                              className={`relative aspect-square rounded-lg border bg-[#0a0a12] overflow-hidden cursor-pointer transition-all ${isSelected
                                   ? "border-[#6a4cff] border-2"
                                   : "border-[#141533] hover:border-[#6a4cff] hover:border-2"
-                              }`}
+                                }`}
                               onClick={() => setSelectedProductPhoto(isSelected ? null : index)}
                             >
                               {!imageErrors.has(index) ? (
@@ -870,7 +817,7 @@ export default function StrategyPage() {
                             </div>
                             {/* Selected State - Red X on Hover (Outside the card) */}
                             {isSelected && (
-                              <div 
+                              <div
                                 className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10 shadow-lg"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1298,7 +1245,7 @@ export default function StrategyPage() {
                           </svg>
                         </button>
                       </div>
-                      
+
                       {/* Customer Testimonial Textarea */}
                       <textarea
                         value={testimonial.quote}
@@ -1311,7 +1258,7 @@ export default function StrategyPage() {
                         className="w-full rounded-lg border border-[#141533] bg-[#0d1117] px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#6a4cff] transition-colors resize-none"
                         rows={4}
                       />
-                      
+
                       {/* Author and Title Inputs */}
                       <div className="grid grid-cols-2 gap-3 mt-3">
                         <input
@@ -1560,16 +1507,16 @@ export default function StrategyPage() {
               )}
 
               {/* Show message if no AI insights available */}
-              {!aiInsights.uniqueSellingProposition && 
-               !aiInsights.targetAudience && 
-               !aiInsights.currentOffer && 
-               !aiInsights.brandToneAndVoice && (
-                <div className="rounded-lg border border-[#141533] bg-[#0a0a12] p-4">
-                  <p className="text-sm text-zinc-400 text-center">
-                    AI insights are being generated. Please check back shortly.
-                  </p>
-                </div>
-              )}
+              {!aiInsights.uniqueSellingProposition &&
+                !aiInsights.targetAudience &&
+                !aiInsights.currentOffer &&
+                !aiInsights.brandToneAndVoice && (
+                  <div className="rounded-lg border border-[#141533] bg-[#0a0a12] p-4">
+                    <p className="text-sm text-zinc-400 text-center">
+                      AI insights are being generated. Please check back shortly.
+                    </p>
+                  </div>
+                )}
             </div>
           </div>
 
@@ -1598,7 +1545,52 @@ export default function StrategyPage() {
 
             {/* Generate 3 Ads Button */}
             <button
-              onClick={() => router.push('/dashboard/generate/banners')}
+              onClick={async () => {
+                // Save brand assets to localStorage before navigating
+                try {
+                  const brandAssets: {
+                    selectedLogo?: string;
+                    selectedProductImage?: string;
+                    productImageUrl?: string;
+                  } = {};
+
+                  // Save selected product photo if any
+                  if (selectedProductPhoto !== null && extractedImages[selectedProductPhoto]) {
+                    const selectedImage = extractedImages[selectedProductPhoto];
+                    brandAssets.productImageUrl = selectedImage.src;
+                    // Convert to base64 for the API
+                    try {
+                      const response = await fetch(selectedImage.src);
+                      const blob = await response.blob();
+                      const reader = new FileReader();
+                      const base64Promise = new Promise<string>((resolve) => {
+                        reader.onloadend = () => resolve(reader.result as string);
+                        reader.readAsDataURL(blob);
+                      });
+                      brandAssets.selectedProductImage = await base64Promise;
+                    } catch (imgError) {
+                      console.warn('Could not convert product image to base64:', imgError);
+                      // Still save the URL as fallback
+                    }
+                  }
+
+                  // Save selected logo if any
+                  if (extractedLogo && !logoError) {
+                    brandAssets.selectedLogo = extractedLogo;
+                  }
+
+                  // Save brand assets to localStorage
+                  if (Object.keys(brandAssets).length > 0) {
+                    localStorage.setItem('brandAssets', JSON.stringify(brandAssets));
+                    console.log('Brand assets saved:', Object.keys(brandAssets));
+                  }
+                } catch (error) {
+                  console.error('Error saving brand assets:', error);
+                }
+
+                // Navigate to banners page
+                router.push('/dashboard/generate/banners');
+              }}
               className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-6 py-3 text-white font-medium transition-all hover:from-[#9333ea] hover:to-[#db2777] shadow-lg shadow-purple-500/20"
             >
               <span>Generate 3 Ads</span>

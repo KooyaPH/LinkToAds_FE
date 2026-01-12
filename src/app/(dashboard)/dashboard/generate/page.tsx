@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { steps } from "@/lib/generateConstants";
+import PlanCard from "@/components/PlanCard";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -252,38 +253,11 @@ export default function GeneratePage() {
       {/* Main Content */}
       <main className="relative px-4 py-6 sm:px-8 sm:py-8 lg:px-16 lg:py-12">
         {/* Plan Card - Centered on mobile, absolute on larger screens */}
-        <div className="mb-6 flex justify-center lg:justify-end lg:absolute lg:top-8 lg:right-16 lg:mb-0">
-          <div className="rounded-lg border border-[#1a1a22] bg-[#0d1117] px-4 py-3 w-full max-w-xs sm:w-auto">
-            <div className="flex items-center justify-between gap-6 mb-1">
-              <div className="flex items-center gap-1.5">
-                <svg
-                  className="h-4 w-4 text-purple-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                  />
-                </svg>
-                <span className="text-sm font-medium text-white">Plan</span>
-              </div>
-              <span className="rounded-full bg-[#22d3ee] px-3 py-0.5 text-xs font-semibold text-black">
-                {planData.plan}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400">Ads this month</span>
-              <span className="text-white">
-                {planData.adsThisMonth} / {planData.limit === Infinity ? "∞" : planData.limit}
-              </span>
-            </div>
-            <p className="text-xs text-[#22d3ee] mt-1">Unlimited ad generation</p>
-          </div>
-        </div>
+        <PlanCard
+          plan={planData.plan}
+          adsThisMonth={planData.adsThisMonth}
+          limit={planData.limit}
+        />
 
         {/* Stepper */}
         <div className="flex items-center justify-center gap-0 mb-8 sm:mb-12 lg:mb-16">
