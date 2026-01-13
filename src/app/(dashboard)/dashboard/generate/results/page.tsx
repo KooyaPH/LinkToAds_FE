@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { steps } from "@/lib/generateConstants";
 import PlanCard from "@/components/PlanCard";
+import AdCard from "@/components/AdCard";
 
 interface Banner {
   id: number;
@@ -12,6 +13,24 @@ interface Banner {
   label?: string;
   error?: string;
   size?: string;
+  archetype?: string;
+}
+
+interface ExtractedData {
+  productInfo?: {
+    productName?: string;
+    industry?: string;
+    tagline?: string;
+  };
+  aiInsights?: {
+    businessDescription?: string;
+    uniqueSellingProposition?: string;
+    targetAudience?: string;
+    brandToneAndVoice?: string;
+    businessType?: string;
+  };
+  ctas?: string[];
+  keyFeatures?: string[];
 }
 
 export default function ResultsPage() {
@@ -19,6 +38,7 @@ export default function ResultsPage() {
   const currentStep = 4; // Step 4 (Results)
   const [banners, setBanners] = useState<Banner[]>([]);
   const [selectedBanners, setSelectedBanners] = useState<number[]>([]);
+  const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
 
   const planData = {
     plan: "Pro",
@@ -26,7 +46,105 @@ export default function ResultsPage() {
     limit: 200,
   };
 
-  // Load banners from localStorage on mount
+  // Generate caption based on extracted data and banner index
+  const generateCaption = (banner: Banner, index: number) => {
+    if (!extractedData) {
+      return {
+        header: "DISCOVER AMAZING PRODUCTS AND SERVICES",
+        main: "Transform Your Life Today!",
+      };
+    }
+
+    const productName = extractedData.productInfo?.productName || "Our Product";
+    const usp = extractedData.aiInsights?.uniqueSellingProposition || "";
+    const features = extractedData.keyFeatures || [];
+    const ctas = extractedData.ctas || [];
+
+    // Generate header (truncated USP or feature)
+    const headerOptions = [
+      usp ? usp.substring(0, 40).toUpperCase() + "..." : "",
+      features[0] ? features[0].substring(0, 40).toUpperCase() + "..." : "",
+      "ENSURE YOUR LOVED ONES ARE COVERED...",
+      "DISCOVER THE PERFECT SOLUTION FOR YOU...",
+    ].filter(Boolean);
+
+    // Generate main caption
+    const mainOptions = [
+      ctas[0] || `Get Started with ${productName} Today!`,
+      `Experience ${productName} - ${usp.substring(0, 50)}`,
+      `Peace of Mind? Secure Your Family's Future Easily!`,
+      `Transform Your Life with ${productName}!`,
+      features[0] ? `${features[0]} - Start Now!` : `Discover ${productName} Today!`,
+    ].filter(Boolean);
+
+    // Use index to vary captions
+    const headerIndex = index % headerOptions.length;
+    const mainIndex = index % mainOptions.length;
+
+    return {
+      header: headerOptions[headerIndex] || "DISCOVER AMAZING PRODUCTS",
+      main: mainOptions[mainIndex] || "Transform Your Life Today!",
+    };
+  };
+
+  // Generate context label based on archetype or banner type
+  const generateContext = (banner: Banner, index: number) => {
+    const archetype = banner.archetype || "";
+    const contexts = [
+      "Lifestyle Context",
+      "Product Context",
+      "Social Proof Context",
+      "Educational Context",
+      "Urgency Context",
+      "Native Context",
+    ];
+    
+    // Map archetypes to contexts
+    const archetypeMap: { [key: string]: string } = {
+      "lifestyle": "Lifestyle Context",
+      "lofi": "Lifestyle Context",
+      "product": "Product Context",
+      "5star": "Social Proof Context",
+      "social": "Social Proof Context",
+      "educational": "Educational Context",
+      "urgency": "Urgency Context",
+      "native": "Native Context",
+    };
+    
+    // Check if archetype matches any key
+    const lowerArchetype = archetype.toLowerCase();
+    for (const [key, value] of Object.entries(archetypeMap)) {
+      if (lowerArchetype.includes(key)) {
+        return value;
+      }
+    }
+    
+    // Fallback to index-based selection
+    return contexts[index % contexts.length];
+  };
+
+  // Generate ad copy
+  const generateAdCopy = (banner: Banner, index: number) => {
+    if (!extractedData) {
+      return "Discover our amazing products and services designed to help you achieve your goals. Join thousands of satisfied customers today.";
+    }
+
+    const productName = extractedData.productInfo?.productName || "our product";
+    const description = extractedData.aiInsights?.businessDescription || "";
+    const usp = extractedData.aiInsights?.uniqueSellingProposition || "";
+    const targetAudience = extractedData.aiInsights?.targetAudience || "";
+
+    const copyOptions = [
+      `Imagine a future where ${targetAudience ? targetAudience.toLowerCase() : "you"} don't have to worry about ${productName.toLowerCase()}. ${productName} helps you ${usp.toLowerCase() || "achieve your goals"} with ease and confidence.`,
+      `Discover ${productName} - ${description.substring(0, 100)}${description.length > 100 ? "..." : ""}`,
+      `Looking for ${productName.toLowerCase()}? ${productName} offers ${usp.toLowerCase() || "premium quality"} designed specifically for ${targetAudience.toLowerCase() || "you"}. Experience the difference today.`,
+      `Transform your life with ${productName}. ${usp || "Our innovative solution"} helps ${targetAudience.toLowerCase() || "you"} achieve ${productName.toLowerCase()} goals faster and easier than ever before.`,
+    ];
+
+    return copyOptions[index % copyOptions.length];
+  };
+
+  // Load banners and extracted data from localStorage on mount
   useEffect(() => {
     const storedBanners = localStorage.getItem('generatedBanners');
     if (storedBanners) {
@@ -38,10 +156,48 @@ export default function ResultsPage() {
     if (storedSelected) {
       setSelectedBanners(JSON.parse(storedSelected));
     }
+
+    // Load extracted data for generating captions
+    const storedExtractedData = localStorage.getItem('extractedData');
+    if (storedExtractedData) {
+      try {
+        const parsed = JSON.parse(storedExtractedData);
+        setExtractedData(parsed);
+      } catch (e) {
+        console.error('Failed to parse extracted data:', e);
+      }
+    }
   }, []);
 
   const successfulBanners = banners.filter(b => b.image);
   const bannerCount = successfulBanners.length || parseInt(localStorage.getItem('requestedAdsCount') || '3', 10);
+  
+  // Get brand name from extracted data
+  const brandName = extractedData?.productInfo?.productName || "Your Brand";
+
+  // Handle actions
+  const handleCopy = (bannerId: number) => {
+    // Copy banner image or data to clipboard
+    console.log('Copy banner:', bannerId);
+    // TODO: Implement copy functionality
+  };
+
+  const handleRegenerate = (bannerId: number) => {
+    // Navigate to banners page for regeneration
+    router.push('/dashboard/generate/banners');
+  };
+
+  const handleDownload = (banner: Banner) => {
+    if (!banner.image) return;
+    
+    // Create a temporary anchor element to download the image
+    const link = document.createElement('a');
+    link.href = banner.image;
+    link.download = `banner-${banner.id}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex flex-col">
@@ -153,46 +309,33 @@ export default function ResultsPage() {
           </button>
         </section>
 
-        {/* Banner Preview Grid */}
+        {/* Ad Cards Grid */}
         {successfulBanners.length > 0 && (
           <div className="max-w-7xl mx-auto mt-12 px-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               {successfulBanners.map((banner, index) => (
-                <div
+                <AdCard
                   key={banner.id}
-                  className="relative aspect-square rounded-xl overflow-hidden border border-[#141533] bg-[#0d1117] group"
-                >
-                  {banner.image && (
-                    <img
-                      src={banner.image}
-                      alt={banner.label || `Banner ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-white text-sm font-medium hover:bg-white/20 transition-colors">
-                      Download
-                    </button>
-                  </div>
-                  {banner.label && (
-                    <div className="absolute bottom-2 left-2 right-2">
-                      <span className="inline-block px-2 py-1 bg-black/60 backdrop-blur-sm rounded text-white text-xs">
-                        {banner.label}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                  banner={banner}
+                  brandName={brandName}
+                  adCopy={generateAdCopy(banner, index)}
+                  context={generateContext(banner, index)}
+                  caption={generateCaption(banner, index)}
+                  onCopy={() => handleCopy(banner.id)}
+                  onRegenerate={() => handleRegenerate(banner.id)}
+                  onDownload={() => handleDownload(banner)}
+                />
               ))}
             </div>
           </div>
         )}
 
         {/* Navigation Buttons */}
-        <div className="w-full max-w-7xl mx-auto px-8 mt-12 pb-12 flex items-center justify-between">
-          {/* Back Button */}
+        <div className="w-full max-w-7xl mx-auto px-8 mt-12 pb-12 flex items-center justify-center gap-4">
+          {/* Generate New Ads Button */}
           <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 rounded-lg border border-zinc-700/50 bg-[#0d1117] px-6 py-3 text-white transition-all hover:border-zinc-600 hover:bg-[#12121a]"
+            onClick={() => router.push('/dashboard/generate')}
+            className="flex items-center gap-2 rounded-lg border border-[#141533] bg-[#0d1117] px-6 py-3 text-white text-sm font-medium transition-all hover:border-[#6666FF] hover:bg-[#12121a]"
           >
             <svg
               className="h-5 w-5"
@@ -204,18 +347,20 @@ export default function ResultsPage() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M15 19l-7-7 7-7"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
-            <span>Back</span>
+            <span>Generate New Ads</span>
           </button>
 
-          {/* Finish Button */}
+          {/* Save Campaign Button */}
           <button
-            onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-6 py-3 text-white font-medium transition-all hover:from-[#9333ea] hover:to-[#db2777] shadow-lg shadow-purple-500/20"
+            onClick={() => {
+              // TODO: Implement save campaign functionality
+              console.log('Save campaign');
+            }}
+            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#6666FF] to-[#FF66FF] px-6 py-3 text-white text-sm font-medium transition-all hover:from-[#7a5cff] hover:to-[#ff77ff] shadow-lg shadow-purple-500/20"
           >
-            <span>Finish & Go to Dashboard</span>
             <svg
               className="h-5 w-5"
               fill="none"
@@ -226,9 +371,43 @@ export default function ResultsPage() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M5 13l4 4L19 7"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
               />
             </svg>
+            <span>Save Campaign</span>
+          </button>
+
+          {/* Download All Button */}
+          <button
+            onClick={() => {
+              // Download all banners
+              successfulBanners.forEach((banner) => {
+                if (banner.image) {
+                  const link = document.createElement('a');
+                  link.href = banner.image;
+                  link.download = `banner-${banner.id}.png`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }
+              });
+            }}
+            className="flex items-center gap-2 rounded-lg border border-[#141533] bg-[#0d1117] px-6 py-3 text-white text-sm font-medium transition-all hover:border-[#6666FF] hover:bg-[#12121a]"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            <span>Download All</span>
           </button>
         </div>
       </main>

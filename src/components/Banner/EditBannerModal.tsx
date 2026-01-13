@@ -375,7 +375,7 @@ export default function EditBannerModal({
                 <h3 className="text-sm font-medium text-white mb-3">
                   Add or Replace Product Photo
                 </h3>
-                <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#141533] bg-[#0d1117] text-white text-sm font-medium hover:bg-[#141533] transition-colors cursor-pointer inline-block">
+                <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#141533] bg-[#0d1117] text-white text-sm font-medium hover:bg-[#141533] transition-colors cursor-pointer inline-flex">
                   <input
                     type="file"
                     accept="image/*"
@@ -505,7 +505,7 @@ export default function EditBannerModal({
               <label className="block text-sm font-medium text-white mb-2">
                 Add or Replace Logo
               </label>
-              <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#141533] bg-[#0d1117] text-white text-sm font-medium hover:bg-[#141533] transition-colors mb-4 cursor-pointer inline-block">
+              <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#141533] bg-[#0d1117] text-white text-sm font-medium hover:bg-[#141533] transition-colors mb-4 cursor-pointer inline-flex">
                 <input
                   type="file"
                   accept="image/*"
