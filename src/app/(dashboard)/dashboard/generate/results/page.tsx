@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { steps, archetypeCategories } from "@/lib/generateConstants";
 import PlanCard from "@/components/PlanCard";
 import AdCard from "@/components/AdCard";
+import { supabase, saveCampaign } from "@/lib/supabase";
+import { api } from "@/lib/api";
 
 interface Banner {
   id: number;
@@ -41,6 +43,8 @@ export default function ResultsPage() {
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [isEditingCopy, setIsEditingCopy] = useState(false);
   const [editedAdCopies, setEditedAdCopies] = useState<{ [key: number]: string }>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
 
   const planData = {
     plan: "Pro",
@@ -204,6 +208,70 @@ export default function ResultsPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Save campaign to Supabase
+  const handleSaveCampaign = async () => {
+    if (successfulBanners.length === 0) {
+      setSaveStatus({ type: 'error', message: 'No banners to save' });
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveStatus({ type: null, message: '' });
+
+    try {
+      // Get user ID from localStorage (API auth) or Supabase session
+      let userId: string | null = null;
+      
+      const user = api.getUser();
+      if (user?.id) {
+        userId = user.id;
+      } else {
+        // Fallback to Supabase session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          userId = session.user.id;
+        }
+      }
+
+      if (!userId) {
+        setSaveStatus({ type: 'error', message: 'Please log in to save your campaign' });
+        setIsSaving(false);
+        return;
+      }
+
+      // Prepare ads data with images and captions
+      const adsToSave = successfulBanners.map((banner, index) => ({
+        image: banner.image!,
+        caption: generateAdCopy(banner, index),
+        title: `${brandName} - Ad ${index + 1}`,
+      }));
+
+      // Save campaign
+      const result = await saveCampaign(userId, adsToSave);
+
+      if (result.success) {
+        setSaveStatus({ 
+          type: 'success', 
+          message: `Successfully saved ${result.savedCount} ad${result.savedCount > 1 ? 's' : ''} to your campaign! Redirecting...` 
+        });
+        // Redirect to dashboard after a brief delay
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1500);
+      } else {
+        setSaveStatus({ 
+          type: 'error', 
+          message: result.error || 'Failed to save campaign' 
+        });
+      }
+    } catch (error) {
+      console.error('Save campaign error:', error);
+      setSaveStatus({ type: 'error', message: 'An error occurred while saving' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -375,26 +443,55 @@ export default function ResultsPage() {
 
           {/* Save Campaign Button */}
           <button
-            onClick={() => {
-              // TODO: Implement save campaign functionality
-              console.log('Save campaign');
-            }}
-            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#6666FF] to-[#FF66FF] px-6 py-3 text-white text-sm font-medium transition-all hover:from-[#7a5cff] hover:to-[#ff77ff] shadow-lg shadow-purple-500/20"
+            onClick={handleSaveCampaign}
+            disabled={isSaving}
+            className={`flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#6666FF] to-[#FF66FF] px-6 py-3 text-white text-sm font-medium transition-all shadow-lg shadow-purple-500/20 ${
+              isSaving 
+                ? 'opacity-70 cursor-not-allowed' 
+                : 'hover:from-[#7a5cff] hover:to-[#ff77ff]'
+            }`}
           >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            <span>Save Campaign</span>
+            {isSaving ? (
+              <>
+                <svg
+                  className="h-5 w-5 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                <span>Save Campaign</span>
+              </>
+            )}
           </button>
 
           {/* Download All Button */}
@@ -430,6 +527,38 @@ export default function ResultsPage() {
             <span>Download All</span>
           </button>
         </div>
+
+        {/* Save Status Message */}
+        {saveStatus.type && (
+          <div className="w-full max-w-7xl mx-auto px-8 pb-8">
+            <div
+              className={`flex items-center gap-3 rounded-lg px-4 py-3 ${
+                saveStatus.type === 'success'
+                  ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+                  : 'bg-red-500/10 border border-red-500/20 text-red-400'
+              }`}
+            >
+              {saveStatus.type === 'success' ? (
+                <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              <span className="text-sm">{saveStatus.message}</span>
+              <button
+                onClick={() => setSaveStatus({ type: null, message: '' })}
+                className="ml-auto text-current hover:opacity-70 transition-opacity"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
