@@ -6,8 +6,9 @@ import EditBannerModal from "./EditBannerModal";
 interface BannerGridProps {
   selectedBanners: number[];
   onBannerToggle: (index: number) => void;
-  banners?: Array<{ id: number; image?: string | null; label?: string; error?: string; size?: string }>;
+  banners?: Array<{ id: number; image?: string | null; label?: string; error?: string; size?: string; archetype?: string }>;
   isGenerating?: boolean;
+  onBannerUpdate?: (bannerId: number, updatedBanner: { id: number; image?: string | null; label?: string; error?: string; size?: string; archetype?: string }) => void;
 }
 
 export default function BannerGrid({
@@ -15,9 +16,12 @@ export default function BannerGrid({
   onBannerToggle,
   banners = [],
   isGenerating = false,
+  onBannerUpdate,
 }: BannerGridProps) {
   const [editingBanner, setEditingBanner] = useState<number | null>(null);
   const [productImages, setProductImages] = useState<Array<{ src: string; alt: string; type?: string }>>([]);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [regenerationError, setRegenerationError] = useState<string | null>(null);
 
   // Load product images from localStorage
   useEffect(() => {
@@ -48,17 +52,139 @@ export default function BannerGrid({
 
   const handleCloseModal = () => {
     setEditingBanner(null);
+    setRegenerationError(null);
   };
 
-  const handleApplyChanges = (changes: string) => {
-    // Handle apply changes logic here
-    console.log("Applying changes to banner", editingBanner, ":", changes);
-    // You can add API call or state update here
+  const handleApplyChanges = async (bannerId: number, changes: string, uploadedAssets?: { productImage?: string; logo?: string }) => {
+    console.log('handleApplyChanges called with:', { bannerId, changesLength: changes.length });
+    
+    if (!changes.trim()) {
+      console.warn('Cannot regenerate: empty changes');
+      return;
+    }
+
+    if (bannerId === undefined || bannerId === null) {
+      console.error('Cannot regenerate: missing banner ID', { bannerId, type: typeof bannerId });
+      alert('Invalid banner ID. Please try again.');
+      return;
+    }
+
+    const banner = banners.find(b => b.id === bannerId);
+    if (!banner) {
+      console.error('Banner not found:', { bannerId, banners: banners.map(b => ({ id: b.id })) });
+      alert('Banner not found. Please try again.');
+      return;
+    }
+
+    console.log('Found banner for regeneration:', { banner, bannerId, bannerIdType: typeof bannerId });
+
+    // Ensure banner has an ID (use bannerId parameter if banner.id is missing)
+    const actualBannerId = banner.id !== undefined && banner.id !== null ? banner.id : bannerId;
+    
+    if (actualBannerId === undefined || actualBannerId === null) {
+      console.error('Cannot determine banner ID:', { banner, bannerId });
+      alert('Invalid banner ID. Please try again.');
+      return;
+    }
+
+    if (!banner.image) {
+      console.error('Banner has no image:', banner);
+      alert('Cannot regenerate: Banner has no image.');
+      return;
+    }
+
+    setIsRegenerating(true);
+    setRegenerationError(null);
+
+    try {
+      // Get extracted data and brand assets from localStorage
+      const storedData = localStorage.getItem('extractedData');
+      const brandAssetsData = localStorage.getItem('brandAssets');
+      
+      if (!storedData) {
+        throw new Error('No extracted data found. Please go back and extract data first.');
+      }
+
+      const extractedData = JSON.parse(storedData);
+      const brandAssets = brandAssetsData ? JSON.parse(brandAssetsData) : {};
+
+      // Merge uploaded assets with existing brand assets
+      if (uploadedAssets) {
+        if (uploadedAssets.productImage) {
+          brandAssets.selectedProductImage = uploadedAssets.productImage;
+        }
+        if (uploadedAssets.logo) {
+          brandAssets.selectedLogo = uploadedAssets.logo;
+        }
+      }
+
+      // Ensure banner has required fields
+      const bannerData = {
+        id: actualBannerId,
+        size: banner.size || 'square',
+        archetype: banner.archetype || null,
+        label: banner.label || `Banner ${actualBannerId + 1}`,
+      };
+
+      console.log('🔄 Regenerating banner with edits:', {
+        bannerId: bannerData.id,
+        editInstructions: changes.substring(0, 50) + '...',
+        size: bannerData.size,
+        archetype: bannerData.archetype,
+      });
+
+      // Call regeneration API
+      const response = await fetch('http://localhost:5000/api/generate/banners/regenerate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          extractedData,
+          banner: bannerData,
+          editInstructions: changes,
+          brandAssets,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.banner) {
+        console.log('✅ Banner regenerated successfully:', data.banner.id);
+        
+        // Update the banner in the list
+        if (onBannerUpdate) {
+          onBannerUpdate(bannerId, data.banner);
+        }
+        
+        // Close modal and reset state
+        setEditingBanner(null);
+      } else {
+        throw new Error(data.error || 'Failed to regenerate banner');
+      }
+    } catch (error: any) {
+      console.error('❌ Error regenerating banner:', error);
+      const errorMessage = error.message || 'Failed to regenerate banner. Please try again.';
+      setRegenerationError(errorMessage);
+      alert(errorMessage);
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   const currentBanner = editingBanner !== null 
     ? banners.find(b => b.id === editingBanner) 
     : null;
+
+  // Debug log
+  if (currentBanner) {
+    console.log('Current banner for editing:', { id: currentBanner.id, banner: currentBanner });
+  }
 
   return (
     <>
@@ -165,13 +291,17 @@ export default function BannerGrid({
       </div>
 
       {/* Edit Banner Modal */}
-      {currentBanner && (
+      {currentBanner && editingBanner !== null && (
         <EditBannerModal
           isOpen={editingBanner !== null}
           onClose={handleCloseModal}
-          banner={currentBanner}
+          banner={{
+            ...currentBanner,
+            id: currentBanner.id ?? editingBanner, // Fallback to editingBanner if id is missing
+          }}
           onApplyChanges={handleApplyChanges}
           productImages={productImages}
+          isRegenerating={isRegenerating}
         />
       )}
     </>

@@ -140,6 +140,17 @@ export default function BannersPage() {
     });
   };
 
+  const handleBannerUpdate = (bannerId: number, updatedBanner: Banner) => {
+    setBanners((prevBanners) => {
+      const updated = prevBanners.map((banner) =>
+        banner.id === bannerId ? updatedBanner : banner
+      );
+      // Update localStorage with regenerated banner
+      localStorage.setItem('generatedBanners', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const handleSaveAndContinue = () => {
     // Save generated banners to localStorage for the results page
     localStorage.setItem('generatedBanners', JSON.stringify(banners));
@@ -358,6 +369,7 @@ export default function BannersPage() {
                   onBannerToggle={toggleBannerSelection}
                   banners={banners}
                   isGenerating={isGenerating}
+                  onBannerUpdate={handleBannerUpdate}
                 />
                 
                 {/* Footer with Status and Regenerate Button */}
