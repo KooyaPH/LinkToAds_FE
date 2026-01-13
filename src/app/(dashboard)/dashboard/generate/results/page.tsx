@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { steps } from "@/lib/generateConstants";
+import { steps, archetypeCategories } from "@/lib/generateConstants";
 import PlanCard from "@/components/PlanCard";
 import AdCard from "@/components/AdCard";
 
@@ -39,6 +39,8 @@ export default function ResultsPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [selectedBanners, setSelectedBanners] = useState<number[]>([]);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
+  const [isEditingCopy, setIsEditingCopy] = useState(false);
+  const [editedAdCopies, setEditedAdCopies] = useState<{ [key: number]: string }>({});
 
   const planData = {
     plan: "Pro",
@@ -87,9 +89,30 @@ export default function ResultsPage() {
     };
   };
 
-  // Generate context label based on archetype or banner type
+  // Generate context label based on archetype from banner
   const generateContext = (banner: Banner, index: number) => {
-    const archetype = banner.archetype || "";
+    const archetypeId = banner.archetype || "";
+    
+    // Find the archetype in the categories and get its category name
+    if (archetypeId) {
+      for (const category of archetypeCategories) {
+        const foundArchetype = category.archetypes.find(a => a.id === archetypeId);
+        if (foundArchetype) {
+          // Map category names to context labels
+          const categoryContextMap: { [key: string]: string } = {
+            "NATIVE/ORGANIC": "Native Context",
+            "SOCIAL PROOF": "Social Proof Context",
+            "URGENCY/SALES": "Urgency Context",
+            "EDUCATIONAL": "Educational Context",
+            "PRODUCT FOCUS": "Product Context",
+          };
+          
+          return categoryContextMap[category.name] || `${category.name} Context`;
+        }
+      }
+    }
+    
+    // Fallback: if no archetype found, use index-based selection
     const contexts = [
       "Lifestyle Context",
       "Product Context",
@@ -99,32 +122,16 @@ export default function ResultsPage() {
       "Native Context",
     ];
     
-    // Map archetypes to contexts
-    const archetypeMap: { [key: string]: string } = {
-      "lifestyle": "Lifestyle Context",
-      "lofi": "Lifestyle Context",
-      "product": "Product Context",
-      "5star": "Social Proof Context",
-      "social": "Social Proof Context",
-      "educational": "Educational Context",
-      "urgency": "Urgency Context",
-      "native": "Native Context",
-    };
-    
-    // Check if archetype matches any key
-    const lowerArchetype = archetype.toLowerCase();
-    for (const [key, value] of Object.entries(archetypeMap)) {
-      if (lowerArchetype.includes(key)) {
-        return value;
-      }
-    }
-    
-    // Fallback to index-based selection
     return contexts[index % contexts.length];
   };
 
   // Generate ad copy
   const generateAdCopy = (banner: Banner, index: number) => {
+    // Return edited copy if it exists
+    if (editedAdCopies[banner.id]) {
+      return editedAdCopies[banner.id];
+    }
+
     if (!extractedData) {
       return "Discover our amazing products and services designed to help you achieve your goals. Join thousands of satisfied customers today.";
     }
@@ -290,7 +297,12 @@ export default function ResultsPage() {
 
           {/* Edit Copy Button */}
           <button
-            className="flex items-center gap-2 rounded-lg border border-zinc-700/50 bg-[#0d1117] px-5 py-2.5 text-white text-sm font-medium transition-all hover:border-zinc-600 hover:bg-[#12121a]"
+            onClick={() => setIsEditingCopy(!isEditingCopy)}
+            className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all ${
+              isEditingCopy
+                ? "bg-[#6666FF] text-white shadow-lg shadow-purple-500/20"
+                : "border border-zinc-700/50 bg-[#0d1117] text-white hover:border-zinc-600 hover:bg-[#12121a]"
+            }`}
           >
             <svg
               className="h-4 w-4"
@@ -305,7 +317,7 @@ export default function ResultsPage() {
                 d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
               />
             </svg>
-            Edit Copy
+            {isEditingCopy ? "Editing On" : "Edit Copy"}
           </button>
         </section>
 
@@ -324,6 +336,14 @@ export default function ResultsPage() {
                   onCopy={() => handleCopy(banner.id)}
                   onRegenerate={() => handleRegenerate(banner.id)}
                   onDownload={() => handleDownload(banner)}
+                  isEditingMode={isEditingCopy}
+                  onAdCopyChange={(bannerId, newCopy) => {
+                    // Store the edited ad copy
+                    setEditedAdCopies((prev) => ({
+                      ...prev,
+                      [bannerId]: newCopy,
+                    }));
+                  }}
                 />
               ))}
             </div>

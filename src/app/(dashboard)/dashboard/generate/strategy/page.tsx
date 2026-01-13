@@ -1518,8 +1518,8 @@ export default function StrategyPage() {
           </div>
 
           {/* AI Insights */}
-          <div className="w-full max-w-3xl mt-6 rounded-2xl border border-[#141533] bg-[#0d1117] p-4 sm:p-6 lg:p-8">
-            {/* Header */}
+<div className="w-full max-w-3xl mt-6 rounded-2xl border border-[#141533] bg-[#0d1117] p-4 sm:p-6 lg:p-8">
+
             <div className="mb-6 flex items-center gap-2">
               <svg
                 className="h-5 w-5 text-[#6a4cff]"
@@ -1533,9 +1533,9 @@ export default function StrategyPage() {
               </h2>
             </div>
 
-            {/* Content Sections */}
+
             <div className="space-y-4">
-              {/* Unique Selling Proposition */}
+
               {aiInsights.uniqueSellingProposition && (
                 <div>
                   <h3 className="text-sm font-medium text-white mb-2">
@@ -1658,6 +1658,12 @@ export default function StrategyPage() {
             {/* Generate Ads Button */}
             <button
               onClick={async () => {
+                // Validate that at least one banner size is selected
+                if (selectedBannerSizes.length === 0) {
+                  alert('Please select at least one banner size before generating ads.');
+                  return;
+                }
+
                 // Save brand assets and requested ad count to localStorage before navigating
                 try {
                   localStorage.setItem('requestedAdsCount', selectedAds.toString());

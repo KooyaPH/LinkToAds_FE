@@ -118,9 +118,10 @@ export default function BannerGrid({
         }
       }
 
-      // Ensure banner has required fields
+      // Ensure banner has required fields, including the original image
       const bannerData = {
         id: actualBannerId,
+        image: banner.image, // Include original image for editing
         size: banner.size || 'square',
         archetype: banner.archetype || null,
         label: banner.label || `Banner ${actualBannerId + 1}`,
@@ -131,6 +132,7 @@ export default function BannerGrid({
         editInstructions: changes.substring(0, 50) + '...',
         size: bannerData.size,
         archetype: bannerData.archetype,
+        hasOriginalImage: !!bannerData.image,
       });
 
       // Call regeneration API

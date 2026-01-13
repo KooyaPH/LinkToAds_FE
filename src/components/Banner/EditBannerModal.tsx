@@ -104,14 +104,23 @@ export default function EditBannerModal({
     
     setError(null);
     
-    const description = activeTab === "product" 
-      ? placementDescription || changesDescription
-      : changesDescription;
+    // Combine descriptions based on active tab
+    let description = '';
+    if (activeTab === "product") {
+      // For product tab: use placementDescription if provided, otherwise use changesDescription
+      description = placementDescription.trim() || changesDescription.trim();
+    } else if (activeTab === "logo") {
+      // For logo tab: use changesDescription
+      description = changesDescription.trim();
+    } else {
+      // For ai-edit tab: use changesDescription
+      description = changesDescription.trim();
+    }
     
     // Check if user has uploaded assets or provided description
     const hasUploadedProductImage = uploadedProductImage || selectedProductImageIndex !== null;
     const hasUploadedLogo = uploadedLogo !== null;
-    const hasDescription = description.trim().length > 0;
+    const hasDescription = description.length > 0;
     
     // For product tab: require either uploaded image or description
     // For logo tab: require either uploaded logo or description
@@ -177,10 +186,12 @@ export default function EditBannerModal({
       }
       
       // Use description or default message if assets are uploaded
-      const finalDescription = description.trim() || 
-        (hasUploadedProductImage || hasUploadedLogo 
-          ? "Apply the uploaded assets to the banner" 
-          : "");
+      let finalDescription = description;
+      if (!finalDescription && (hasUploadedProductImage || hasUploadedLogo)) {
+        finalDescription = "Apply the uploaded assets to the banner";
+      } else if (!finalDescription) {
+        finalDescription = "Refine and improve the banner";
+      }
       
       onApplyChanges(numericId, finalDescription, Object.keys(uploadedAssets).length > 0 ? uploadedAssets : undefined);
     } else {
@@ -489,13 +500,19 @@ export default function EditBannerModal({
               )}
 
               <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Optional: Describe placement or changes
+                </label>
                 <textarea
                   value={placementDescription}
                   onChange={(e) => setPlacementDescription(e.target.value)}
-                  placeholder="Optional: Describe placement..."
+                  placeholder="e.g., Place product on the left side, make it larger, change background color..."
                   rows={3}
                   className="w-full rounded-lg border border-[#141533] bg-[#0a0a12] px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#6666FF] transition-colors resize-y"
                 />
+                <p className="mt-2 text-xs text-zinc-400">
+                  Describe how you want the product image placed or any other changes to make.
+                </p>
               </div>
             </div>
           )}

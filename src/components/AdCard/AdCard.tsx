@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface AdCardProps {
   banner: {
@@ -20,6 +20,8 @@ interface AdCardProps {
   onCopy?: () => void;
   onRegenerate?: () => void;
   onDownload?: () => void;
+  isEditingMode?: boolean;
+  onAdCopyChange?: (bannerId: number, newCopy: string) => void;
 }
 
 export default function AdCard({
@@ -31,8 +33,20 @@ export default function AdCard({
   onCopy,
   onRegenerate,
   onDownload,
+  isEditingMode = false,
+  onAdCopyChange,
 }: AdCardProps) {
   const [showSeeMore, setShowSeeMore] = useState(false);
+  const [isEditingText, setIsEditingText] = useState(false);
+  const [editedCopy, setEditedCopy] = useState(adCopy);
+  const RECOMMENDED_CHAR_LIMIT = 125;
+  
+  // Sync editedCopy when adCopy prop changes
+  useEffect(() => {
+    if (!isEditingText) {
+      setEditedCopy(adCopy);
+    }
+  }, [adCopy, isEditingText]);
   
   // Generate default caption if not provided
   const defaultCaption = {
@@ -42,6 +56,31 @@ export default function AdCard({
   
   const finalCaption = caption || defaultCaption;
   const displayCopy = showSeeMore ? adCopy : adCopy.substring(0, 120) + "...";
+  
+  // Handle text click - only enable editing if editing mode is on
+  const handleTextClick = () => {
+    if (isEditingMode && !isEditingText) {
+      setIsEditingText(true);
+      setEditedCopy(adCopy);
+    }
+  };
+  
+  // Handle save
+  const handleSave = () => {
+    if (onAdCopyChange) {
+      onAdCopyChange(banner.id, editedCopy);
+    }
+    setIsEditingText(false);
+  };
+  
+  // Handle cancel
+  const handleCancel = () => {
+    setEditedCopy(adCopy);
+    setIsEditingText(false);
+  };
+  
+  const charCount = editedCopy.length;
+  const isOverLimit = charCount > RECOMMENDED_CHAR_LIMIT;
 
   // Get first letter of brand name for avatar
   const avatarLetter = brandName.charAt(0).toUpperCase();
@@ -102,16 +141,93 @@ export default function AdCard({
             </div>
 
             {/* Ad Copy */}
-            <p className="text-white text-sm mt-2 leading-relaxed">
-              {displayCopy}
-            </p>
-            {adCopy.length > 120 && (
-              <button
-                onClick={() => setShowSeeMore(!showSeeMore)}
-                className="text-zinc-400 text-xs mt-1 hover:text-white transition-colors"
-              >
-                {showSeeMore ? "See less" : "See more"}
-              </button>
+            {isEditingText ? (
+              <div className="mt-2 relative flex items-start gap-2">
+                <div className="flex-1 relative">
+                  <textarea
+                    value={editedCopy}
+                    onChange={(e) => setEditedCopy(e.target.value)}
+                    className="w-full min-h-[120px] px-4 py-3 rounded-lg bg-[#0a0a12] border-2 border-[#6666FF] text-white text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#6666FF]/50 focus:border-[#6666FF] resize-none shadow-lg shadow-purple-500/30"
+                    style={{
+                      backgroundImage: 'linear-gradient(rgba(106, 102, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(106, 102, 255, 0.05) 1px, transparent 1px)',
+                      backgroundSize: '20px 20px'
+                    }}
+                    autoFocus
+                    placeholder="Enter your ad copy..."
+                  />
+                  {/* Character Count - Bottom of textarea */}
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-xs text-white">
+                      {charCount} / {RECOMMENDED_CHAR_LIMIT} chars
+                    </span>
+                    {isOverLimit && (
+                      <span className="text-xs text-orange-500 font-medium">
+                        Over recommended
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {/* Save/Cancel Buttons - Positioned on the right side */}
+                <div className="flex flex-col items-center gap-2 pt-1">
+                  <button
+                    onClick={handleSave}
+                    className="p-1 hover:opacity-80 transition-opacity"
+                    title="Save"
+                  >
+                    <svg
+                      className="h-5 w-5 text-green-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="p-1 hover:opacity-80 transition-opacity"
+                    title="Cancel"
+                  >
+                    <svg
+                      className="h-5 w-5 text-red-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p
+                  onClick={handleTextClick}
+                  className={`text-white text-sm mt-2 leading-relaxed ${
+                    isEditingMode ? "cursor-pointer hover:bg-[#141533]/50 rounded px-2 py-1 -mx-2 -my-1 transition-colors" : ""
+                  }`}
+                >
+                  {displayCopy}
+                </p>
+                {adCopy.length > 120 && !isEditingText && (
+                  <button
+                    onClick={() => setShowSeeMore(!showSeeMore)}
+                    className="text-zinc-400 text-xs mt-1 hover:text-white transition-colors"
+                  >
+                    {showSeeMore ? "See less" : "See more"}
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
