@@ -57,10 +57,12 @@ interface ExtractedData {
   }>;
   trustSignals: string[];
   aiInsights: {
+    businessDescription: string;
     uniqueSellingProposition: string;
     targetAudience: string;
-    currentOffer: string;
     brandToneAndVoice: string;
+    businessType: string;
+    currentOffer: string;
   };
   extractedAt: string;
 }
@@ -105,10 +107,12 @@ export default function StrategyPage() {
   const [trustSignals, setTrustSignals] = useState<string[]>([]);
   const [ctas, setCtas] = useState<string[]>([]);
   const [aiInsights, setAiInsights] = useState({
+    businessDescription: "",
     uniqueSellingProposition: "",
     targetAudience: "",
-    currentOffer: "",
     brandToneAndVoice: "",
+    businessType: "",
+    currentOffer: "",
   });
   const [extractedImages, setExtractedImages] = useState<Array<{ src: string; alt: string; type: string }>>([]);
   const [extractedLogo, setExtractedLogo] = useState<string | null>(null);
@@ -155,7 +159,14 @@ export default function StrategyPage() {
             setCtas(data.ctas);
           }
           if (data.aiInsights) {
-            setAiInsights(data.aiInsights);
+            setAiInsights({
+              businessDescription: data.aiInsights.businessDescription || data.description || "",
+              uniqueSellingProposition: data.aiInsights.uniqueSellingProposition || "",
+              targetAudience: data.aiInsights.targetAudience || "",
+              brandToneAndVoice: data.aiInsights.brandToneAndVoice || "",
+              businessType: data.aiInsights.businessType || data.productInfo?.industry || "",
+              currentOffer: data.aiInsights.currentOffer || "",
+            });
           }
           if (data.images) {
             setExtractedImages(data.images);
@@ -285,16 +296,16 @@ export default function StrategyPage() {
               <div className="flex flex-col items-center">
                 <div
                   className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full text-xs sm:text-sm font-semibold transition-all ${step.number <= currentStep
-                      ? "bg-gradient-to-r from-[#6666FF] to-[#FF66FF] text-white"
-                      : "border border-[#141533] bg-[#0d1117] text-zinc-400"
+                    ? "bg-gradient-to-r from-[#6666FF] to-[#FF66FF] text-white"
+                    : "border border-[#141533] bg-[#0d1117] text-zinc-400"
                     }`}
                 >
                   {step.number}
                 </div>
                 <span
                   className={`mt-1.5 sm:mt-2 text-[10px] sm:text-xs font-medium hidden sm:block ${step.number <= currentStep
-                      ? "text-white"
-                      : "text-zinc-500"
+                    ? "text-white"
+                    : "text-zinc-500"
                     }`}
                 >
                   {step.label}
@@ -303,8 +314,8 @@ export default function StrategyPage() {
               {index < steps.length - 1 && (
                 <div
                   className={`h-[2px] w-6 sm:w-12 lg:w-16 mx-1 sm:mx-2 sm:mt-[-20px] ${step.number < currentStep
-                      ? "bg-gradient-to-r from-[#6666FF] to-[#FF66FF]"
-                      : "bg-[#1a1a22]"
+                    ? "bg-gradient-to-r from-[#6666FF] to-[#FF66FF]"
+                    : "bg-[#1a1a22]"
                     }`}
                 />
               )}
@@ -357,8 +368,8 @@ export default function StrategyPage() {
                     type="button"
                     onClick={() => setSelectedAds(option.value)}
                     className={`relative flex flex-col items-center justify-center rounded-xl border px-3 py-3 sm:px-4 sm:py-4 text-center transition-all ${isSelected
-                        ? "border-[#6666FF] bg-[#1b1b36] shadow-lg shadow-purple-500/30"
-                        : "border-[#141533] bg-[#0a0a12] hover:border-[#312e81] hover:bg-[#11111c]"
+                      ? "border-[#6666FF] bg-[#1b1b36] shadow-lg shadow-purple-500/30"
+                      : "border-[#141533] bg-[#0a0a12] hover:border-[#312e81] hover:bg-[#11111c]"
                       }`}
                   >
                     {option.badge && (
@@ -420,8 +431,8 @@ export default function StrategyPage() {
                       }
                     }}
                     className={`relative flex flex-col items-center justify-center rounded-lg border px-3 py-3 text-center transition-all ${isSelected
-                        ? "border-[#a855f7] bg-[#1b1b36] shadow-lg shadow-purple-500/30"
-                        : "border-[#141533] bg-[#0d1117] hover:border-[#312e81] hover:bg-[#11111c]"
+                      ? "border-[#a855f7] bg-[#1b1b36] shadow-lg shadow-purple-500/30"
+                      : "border-[#141533] bg-[#0d1117] hover:border-[#312e81] hover:bg-[#11111c]"
                       }`}
                   >
                     <svg
@@ -540,8 +551,8 @@ export default function StrategyPage() {
                             }
                           }}
                           className={`relative flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-all ${isSelected
-                              ? "border-[#6666FF] bg-[#1b1b36] shadow-lg shadow-purple-500/30"
-                              : "border-[#141533] bg-[#0d1117] hover:border-[#312e81] hover:bg-[#11111c]"
+                            ? "border-[#6666FF] bg-[#1b1b36] shadow-lg shadow-purple-500/30"
+                            : "border-[#141533] bg-[#0d1117] hover:border-[#312e81] hover:bg-[#11111c]"
                             }`}
                         >
                           {isSelected && (
@@ -770,8 +781,8 @@ export default function StrategyPage() {
                           >
                             <div
                               className={`relative aspect-square rounded-lg border bg-[#0a0a12] overflow-hidden cursor-pointer transition-all ${isSelected
-                                  ? "border-[#6a4cff] border-2"
-                                  : "border-[#141533] hover:border-[#6a4cff] hover:border-2"
+                                ? "border-[#6a4cff] border-2"
+                                : "border-[#141533] hover:border-[#6a4cff] hover:border-2"
                                 }`}
                               onClick={() => setSelectedProductPhoto(isSelected ? null : index)}
                             >
@@ -887,7 +898,7 @@ export default function StrategyPage() {
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
                 <h2 className="text-base sm:text-lg font-semibold text-white">
-                  AI-Extracted Insights
+                Business Insights
                 </h2>
                 <span className="ml-2 rounded-full bg-zinc-700/50 px-2.5 py-0.5 text-xs text-zinc-300">
                   Auto-filled
@@ -896,6 +907,107 @@ export default function StrategyPage() {
               <p className="text-xs text-zinc-400">
                 Review and edit the data extracted from your website. This will be used to generate more accurate ads.
               </p>
+            </div>
+
+            {/* Business Overview Section */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <svg
+                  className="h-4 w-4 text-[#6a4cff]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
+                </svg>
+                <h3 className="text-sm font-semibold text-white">Business Overview</h3>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1.5">
+                    What does this business do?
+                  </label>
+                  <textarea
+                    value={aiInsights.businessDescription}
+                    onChange={(e) => setAiInsights({ ...aiInsights, businessDescription: e.target.value })}
+                    rows={2}
+                    className="w-full rounded-lg border border-[#141533] bg-[#0a0a12] px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6a4cff] transition-colors resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1.5">
+                    Unique Selling Proposition (USP)
+                  </label>
+                  <textarea
+                    value={aiInsights.uniqueSellingProposition}
+                    onChange={(e) => setAiInsights({ ...aiInsights, uniqueSellingProposition: e.target.value })}
+                    rows={2}
+                    className="w-full rounded-lg border border-[#141533] bg-[#0a0a12] px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6a4cff] transition-colors resize-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Target Audience Section */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <svg
+                  className="h-4 w-4 text-pink-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                <h3 className="text-sm font-semibold text-white">Target Audience</h3>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1.5">
+                    Who is this for?
+                  </label>
+                  <input
+                    type="text"
+                    value={aiInsights.targetAudience}
+                    onChange={(e) => setAiInsights({ ...aiInsights, targetAudience: e.target.value })}
+                    className="w-full rounded-lg border border-[#141533] bg-[#0a0a12] px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6a4cff] transition-colors"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-zinc-400 mb-1.5">
+                      Brand Voice
+                    </label>
+                    <input
+                      type="text"
+                      value={aiInsights.brandToneAndVoice}
+                      onChange={(e) => setAiInsights({ ...aiInsights, brandToneAndVoice: e.target.value })}
+                      className="w-full rounded-lg border border-[#141533] bg-[#0a0a12] px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6a4cff] transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-400 mb-1.5">
+                      Business Type
+                    </label>
+                    <input
+                      type="text"
+                      value={aiInsights.businessType}
+                      onChange={(e) => setAiInsights({ ...aiInsights, businessType: e.target.value })}
+                      className="w-full rounded-lg border border-[#141533] bg-[#0a0a12] px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6a4cff] transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Product Info Section */}
@@ -949,7 +1061,7 @@ export default function StrategyPage() {
                 </div>
                 <div>
                   <label className="block text-xs text-zinc-400 mb-1.5">
-                    Tagline / Value Proposition
+                    Tagline
                   </label>
                   <input
                     type="text"
@@ -1543,11 +1655,37 @@ export default function StrategyPage() {
               <span>Back</span>
             </button>
 
-            {/* Generate 3 Ads Button */}
+            {/* Generate Ads Button */}
             <button
               onClick={async () => {
-                // Save brand assets to localStorage before navigating
+                // Save brand assets and requested ad count to localStorage before navigating
                 try {
+                  localStorage.setItem('requestedAdsCount', selectedAds.toString());
+                  localStorage.setItem('selectedBannerSizes', JSON.stringify(selectedBannerSizes));
+                  localStorage.setItem('selectedArchetypes', JSON.stringify(selectedArchetypes));
+
+                  // Update extractedData with edited fields
+                  const storedData = localStorage.getItem('extractedData');
+                  if (storedData) {
+                    const data = JSON.parse(storedData);
+                    const updatedData = {
+                      ...data,
+                      productInfo,
+                      pricing,
+                      socialProof,
+                      keyFeatures,
+                      testimonials,
+                      trustSignals,
+                      ctas,
+                      aiInsights,
+                    };
+                    localStorage.setItem('extractedData', JSON.stringify(updatedData));
+                  }
+
+                  // Clear cached banners to force regeneration with new data
+                  localStorage.removeItem('generatedBanners');
+                  localStorage.removeItem('selectedBannerIds');
+
                   const brandAssets: {
                     selectedLogo?: string;
                     selectedProductImage?: string;
@@ -1593,7 +1731,7 @@ export default function StrategyPage() {
               }}
               className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-6 py-3 text-white font-medium transition-all hover:from-[#9333ea] hover:to-[#db2777] shadow-lg shadow-purple-500/20"
             >
-              <span>Generate 3 Ads</span>
+              <span>Generate {selectedAds} Ads</span>
               <svg
                 className="h-5 w-5"
                 fill="none"

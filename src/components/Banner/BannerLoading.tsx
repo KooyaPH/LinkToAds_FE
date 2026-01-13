@@ -1,4 +1,4 @@
-export default function BannerLoading() {
+export default function BannerLoading({ count = 3 }: { count?: number }) {
   return (
     <section className="flex-1 flex flex-col items-center justify-center px-8 pb-24 pt-8">
       <div className="w-full max-w-2xl rounded-xl border border-[#1a1a22] bg-[#0d1117] p-12 flex flex-col items-center">
@@ -39,7 +39,7 @@ export default function BannerLoading() {
 
         {/* Main Status Text */}
         <p className="text-white text-lg font-medium mb-3">
-          Creating banners with 4 photos (from site)...
+          Generating {count} professional banners...
         </p>
 
         {/* Estimated Time Text */}

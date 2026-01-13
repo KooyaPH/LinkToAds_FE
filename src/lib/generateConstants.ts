@@ -10,11 +10,11 @@ export const steps = [
 ];
 
 export const adOptions = [
-  { value: 3, label: "Quick test", badge: null as string | null },
-  { value: 5, label: "Best", badge: null as string | null },
-  { value: 8, label: "More variety", badge: null as string | null },
-  { value: 10, label: "Maximum", badge: null as string | null },
-  { value: 20, label: "Pro", badge: "PRO" as string | null },
+  { value: 1, label: "Quick test", badge: null as string | null },
+  { value: 3, label: "Best", badge: null as string | null },
+  { value: 5, label: "More variety", badge: null as string | null },
+  { value: 8, label: "Maximum", badge: null as string | null },
+  { value: 10, label: "Pro", badge: "PRO" as string | null },
 ];
 
 export const bannerSizes = [
