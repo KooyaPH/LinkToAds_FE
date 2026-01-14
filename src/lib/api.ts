@@ -124,6 +124,91 @@ class ApiClient {
   async checkHealth(): Promise<ApiResponse<{ status: string; message: string }>> {
     return this.request<{ status: string; message: string }>('/health');
   }
+
+  // Campaign endpoints
+  async saveCampaign(
+    ads: Array<{ image: string; caption: string; title?: string }>,
+    projectInfo?: { 
+      name: string; 
+      url?: string;
+      strategyAnalysis?: {
+        usp?: string;
+        targetAudience?: string;
+        currentOffer?: string;
+        brandTone?: string;
+      };
+    }
+  ): Promise<ApiResponse<{ savedCount: number; totalAds: number; projectId: string }>> {
+    return this.request<{ savedCount: number; totalAds: number; projectId: string }>('/campaign/save', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        ads,
+        projectName: projectInfo?.name,
+        projectUrl: projectInfo?.url,
+        strategyAnalysis: projectInfo?.strategyAnalysis,
+      }),
+    });
+  }
+
+  async getSavedAds(): Promise<ApiResponse<{ ads: Array<{
+    id: string;
+    title: string;
+    content: string;
+    image_url: string;
+    platform: string;
+    status: string;
+    created_at: string;
+  }> }>> {
+    return this.request('/campaign/ads');
+  }
+
+  // Project endpoints
+  async getProjects(): Promise<ApiResponse<{ projects: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    url: string | null;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    ad_count: number;
+    thumbnail_url: string | null;
+  }> }>> {
+    return this.request('/campaign/projects');
+  }
+
+  async deleteProject(projectId: string): Promise<ApiResponse<void>> {
+    return this.request(`/campaign/projects/${projectId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getProject(projectId: string): Promise<ApiResponse<{ project: {
+    id: string;
+    name: string;
+    description: string | null;
+    url: string | null;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    ads: Array<{
+      id: string;
+      title: string;
+      content: string;
+      image_url: string;
+      platform: string;
+      status: string;
+      created_at: string;
+    }>;
+  } }>> {
+    return this.request(`/campaign/projects/${projectId}`);
+  }
+
+  async deleteAd(adId: string): Promise<ApiResponse<void>> {
+    return this.request(`/campaign/ads/${adId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

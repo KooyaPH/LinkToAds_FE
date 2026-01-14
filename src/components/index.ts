@@ -13,4 +13,5 @@ export { default as BusinessTypes } from "./BusinessTypes";
 export { default as Pricing } from "./Pricing";
 export { default as FAQ } from "./FAQ";
 export { default as FinalCTA } from "./FinalCTA";
+export { ProjectAdCard, ProjectAdsGrid, AdLightbox } from "./ProjectAds";
 

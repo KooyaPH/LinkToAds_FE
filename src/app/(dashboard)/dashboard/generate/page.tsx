@@ -51,11 +51,12 @@ interface ExtractedData {
   keyFeatures: string[];
   testimonials: string[];
   trustSignals: string[];
-  aiInsights: {
-    uniqueSellingProposition: string;
-    targetAudience: string;
-    currentOffer: string;
-    brandToneAndVoice: string;
+  aiInsights?: {
+    uniqueSellingProposition?: string;
+    targetAudience?: string;
+    currentOffer?: string;
+    brandToneAndVoice?: string;
+    brandColorPalette?: string[];
   };
   extractedAt: string;
 }
@@ -195,6 +196,7 @@ export default function GeneratePage() {
         console.log("⭐ Favicon:", data.favicon);
         console.log("🎯 CTAs:", data.ctas);
         console.log("🔑 Keywords:", data.keywords);
+        console.log("🤖 AI Insights:", data.aiInsights);
         console.log("📊 Full extracted data:", data);
         
         // Store extracted data in localStorage for the strategy page

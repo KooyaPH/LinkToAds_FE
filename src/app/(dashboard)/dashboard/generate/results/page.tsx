@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { steps, archetypeCategories } from "@/lib/generateConstants";
 import PlanCard from "@/components/PlanCard";
 import AdCard from "@/components/AdCard";
-import { supabase, saveCampaign } from "@/lib/supabase";
 import { api } from "@/lib/api";
 
 interface Banner {
@@ -19,6 +18,7 @@ interface Banner {
 }
 
 interface ExtractedData {
+  url?: string;
   productInfo?: {
     productName?: string;
     industry?: string;
@@ -28,8 +28,10 @@ interface ExtractedData {
     businessDescription?: string;
     uniqueSellingProposition?: string;
     targetAudience?: string;
+    currentOffer?: string;
     brandToneAndVoice?: string;
     businessType?: string;
+    brandColorPalette?: string[];
   };
   ctas?: string[];
   keyFeatures?: string[];
@@ -210,10 +212,16 @@ export default function ResultsPage() {
     document.body.removeChild(link);
   };
 
-  // Save campaign to Supabase
+  // Save campaign via Backend API
   const handleSaveCampaign = async () => {
     if (successfulBanners.length === 0) {
       setSaveStatus({ type: 'error', message: 'No banners to save' });
+      return;
+    }
+
+    // Check if user is authenticated
+    if (!api.isAuthenticated()) {
+      setSaveStatus({ type: 'error', message: 'Please log in to save your campaign' });
       return;
     }
 
@@ -221,26 +229,6 @@ export default function ResultsPage() {
     setSaveStatus({ type: null, message: '' });
 
     try {
-      // Get user ID from localStorage (API auth) or Supabase session
-      let userId: string | null = null;
-      
-      const user = api.getUser();
-      if (user?.id) {
-        userId = user.id;
-      } else {
-        // Fallback to Supabase session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          userId = session.user.id;
-        }
-      }
-
-      if (!userId) {
-        setSaveStatus({ type: 'error', message: 'Please log in to save your campaign' });
-        setIsSaving(false);
-        return;
-      }
-
       // Prepare ads data with images and captions
       const adsToSave = successfulBanners.map((banner, index) => ({
         image: banner.image!,
@@ -248,22 +236,31 @@ export default function ResultsPage() {
         title: `${brandName} - Ad ${index + 1}`,
       }));
 
-      // Save campaign
-      const result = await saveCampaign(userId, adsToSave);
+      // Save campaign via backend API with project info and strategy analysis
+      const result = await api.saveCampaign(adsToSave, {
+        name: brandName,
+        url: extractedData?.url,
+        strategyAnalysis: {
+          usp: extractedData?.aiInsights?.uniqueSellingProposition,
+          targetAudience: extractedData?.aiInsights?.targetAudience,
+          currentOffer: extractedData?.aiInsights?.currentOffer || extractedData?.ctas?.join(', '),
+          brandTone: extractedData?.aiInsights?.brandToneAndVoice,
+        },
+      });
 
-      if (result.success) {
+      if (result.success && result.data) {
         setSaveStatus({ 
           type: 'success', 
-          message: `Successfully saved ${result.savedCount} ad${result.savedCount > 1 ? 's' : ''} to your campaign! Redirecting...` 
+          message: `Successfully saved ${result.data.savedCount} ad${result.data.savedCount > 1 ? 's' : ''} to your campaign! Redirecting...` 
         });
-        // Redirect to dashboard after a brief delay
+        // Redirect to projects page after a brief delay
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/dashboard/projects');
         }, 1500);
       } else {
         setSaveStatus({ 
           type: 'error', 
-          message: result.error || 'Failed to save campaign' 
+          message: result.message || 'Failed to save campaign' 
         });
       }
     } catch (error) {
