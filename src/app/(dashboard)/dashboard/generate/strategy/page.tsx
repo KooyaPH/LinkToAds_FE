@@ -1689,7 +1689,8 @@ export default function StrategyPage() {
                   }
 
                   // Clear cached banners to force regeneration with new data
-                  localStorage.removeItem('generatedBanners');
+                  const { clearBanners } = await import('@/lib/bannerStorage');
+                  await clearBanners();
                   localStorage.removeItem('selectedBannerIds');
 
                   const brandAssets: {

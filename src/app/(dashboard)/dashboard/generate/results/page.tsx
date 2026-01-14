@@ -7,6 +7,7 @@ import { steps, archetypeCategories } from "@/lib/generateConstants";
 import PlanCard from "@/components/PlanCard";
 import AdCard from "@/components/AdCard";
 import { api } from "@/lib/api";
+import { loadBanners } from "@/lib/bannerStorage";
 
 interface Banner {
   id: number;
@@ -157,29 +158,32 @@ export default function ResultsPage() {
     return copyOptions[index % copyOptions.length];
   };
 
-  // Load banners and extracted data from localStorage on mount
+  // Load banners and extracted data from storage on mount
   useEffect(() => {
-    const storedBanners = localStorage.getItem('generatedBanners');
-    if (storedBanners) {
-      const parsedBanners = JSON.parse(storedBanners);
-      setBanners(parsedBanners.filter((b: Banner) => b.image));
-    }
-
-    const storedSelected = localStorage.getItem('selectedBannerIds');
-    if (storedSelected) {
-      setSelectedBanners(JSON.parse(storedSelected));
-    }
-
-    // Load extracted data for generating captions
-    const storedExtractedData = localStorage.getItem('extractedData');
-    if (storedExtractedData) {
-      try {
-        const parsed = JSON.parse(storedExtractedData);
-        setExtractedData(parsed);
-      } catch (e) {
-        console.error('Failed to parse extracted data:', e);
+    const loadData = async () => {
+      const loadedBanners = await loadBanners();
+      if (loadedBanners && loadedBanners.length > 0) {
+        setBanners(loadedBanners.filter((b: Banner) => b.image));
       }
-    }
+
+      const storedSelected = localStorage.getItem('selectedBannerIds');
+      if (storedSelected) {
+        setSelectedBanners(JSON.parse(storedSelected));
+      }
+
+      // Load extracted data for generating captions
+      const storedExtractedData = localStorage.getItem('extractedData');
+      if (storedExtractedData) {
+        try {
+          const parsed = JSON.parse(storedExtractedData);
+          setExtractedData(parsed);
+        } catch (e) {
+          console.error('Failed to parse extracted data:', e);
+        }
+      }
+    };
+    
+    loadData();
   }, []);
 
   const successfulBanners = banners.filter(b => b.image);

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { steps } from "@/lib/generateConstants";
 import PlanCard from "@/components/PlanCard";
+import { api } from "@/lib/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -76,13 +77,38 @@ export default function GeneratePage() {
   const [error, setError] = useState("");
   const [progressStep, setProgressStep] = useState(0);
   const [progressPercent, setProgressPercent] = useState(0);
-
-  // Mock data - would come from API/auth state
-  const planData = {
+  const [planData, setPlanData] = useState({
     plan: "Agency",
     adsThisMonth: 0,
     limit: Infinity,
-  };
+  });
+  const [adsRemaining, setAdsRemaining] = useState<number | null>(null);
+  const [isUnlimited, setIsUnlimited] = useState(true);
+
+  // Fetch usage data on component mount
+  useEffect(() => {
+    const fetchUsage = async () => {
+      try {
+        const response = await api.getUsage();
+        if (response.success && response.data) {
+          const { plan, adsRemaining: remaining, adsUsedThisMonth, monthlyLimit } = response.data;
+          const unlimited = monthlyLimit === -1;
+          
+          setPlanData({
+            plan: plan.charAt(0).toUpperCase() + plan.slice(1),
+            adsThisMonth: adsUsedThisMonth,
+            limit: unlimited ? Infinity : monthlyLimit,
+          });
+          setAdsRemaining(unlimited ? null : remaining);
+          setIsUnlimited(unlimited);
+        }
+      } catch (err) {
+        console.error("Error fetching usage data:", err);
+      }
+    };
+
+    fetchUsage();
+  }, []);
 
   const handleAnalyze = async () => {
     if (!url) return;
@@ -349,7 +375,7 @@ export default function GeneratePage() {
               />
               <button
                 onClick={handleAnalyze}
-                disabled={!url || isLoading}
+                disabled={!url || isLoading || (!isUnlimited && adsRemaining !== null && adsRemaining <= 0)}
                 className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
               >
                 {isLoading ? (

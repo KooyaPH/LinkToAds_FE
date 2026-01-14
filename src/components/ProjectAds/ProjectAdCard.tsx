@@ -96,12 +96,12 @@ export default function ProjectAdCard({
         title="Copy caption"
       >
         {showCheckmark ? (
-          <div className="bg-[#0a0a0f] rounded-lg border-2 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.6)] p-1 transition-all duration-300 flex items-center justify-center w-[18px] h-[18px]">
+          <div className="bg-[#0a0a0f] rounded-lg border-2 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.6)] p-1 transition-all duration-300 flex items-center justify-center w-6 h-6">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              height="14px"
+              height="18px"
               viewBox="0 0 24 24"
-              width="14px"
+              width="18px"
               fill="#22c55e"
               className="transition-all duration-300"
             >
@@ -111,9 +111,9 @@ export default function ProjectAdCard({
         ) : (
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            height="18px"
+            height="24px"
             viewBox="0 -960 960 960"
-            width="18px"
+            width="24px"
             fill="#e3e3e3"
             className="hover:fill-white transition-colors"
           >
@@ -129,9 +129,9 @@ export default function ProjectAdCard({
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          height="18px"
+          height="24px"
           viewBox="0 -960 960 960"
-          width="18px"
+          width="24px"
           fill="#e3e3e3"
           className="hover:fill-white transition-colors"
         >
@@ -139,9 +139,11 @@ export default function ProjectAdCard({
         </svg>
       </button>
       {/* Main Card */}
-      <div className="bg-[#0a0a0f] rounded-xl border border-[#141533] overflow-hidden mb-8">
+      <div className="bg-[#0a0a0f] rounded-xl border border-[#141533] overflow-hidden mt-4 mb-8">
 
-      
+      <div>
+        
+      </div>
 
         {/* Header Section */}
         <div className="px-4 pt-4 pb-3">

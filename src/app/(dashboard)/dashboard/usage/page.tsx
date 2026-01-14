@@ -1,23 +1,93 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSidebar } from "@/components/Sidebar/SidebarContext";
+import { api } from "@/lib/api";
+import UpgradePlanModal from "@/components/UpgradePlanModal";
+
+// Plan display names and token limits
+const PLAN_INFO: Record<string, { name: string; tokens: number }> = {
+  starter: { name: "Starter Pack", tokens: 5 },
+  creator: { name: "Creator", tokens: 20 },
+  business: { name: "Business", tokens: 50 },
+  agency: { name: "Agency", tokens: -1 }, // -1 means unlimited
+};
+
+interface UsageData {
+  currentPlan: string;
+  planDisplayName: string;
+  adsGeneratedThisMonth: number;
+  monthlyLimit: number;
+  remainingThisMonth: number;
+  periodStart: string | null;
+  periodEnd: string | null;
+  isUnlimited: boolean;
+}
 
 export default function UsagePage() {
   const { open } = useSidebar();
-
-  // Mock data - these would come from your API/state management
-  const usageData = {
-    currentPlan: "Free",
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [usageData, setUsageData] = useState<UsageData>({
+    currentPlan: "starter",
+    planDisplayName: "Starter Pack",
     adsGeneratedThisMonth: 0,
     monthlyLimit: 5,
-    remainingThisMonth: 0,
-    periodStart: null as string | null,
-    periodEnd: null as string | null,
-  };
+    remainingThisMonth: 5,
+    periodStart: null,
+    periodEnd: null,
+    isUnlimited: false,
+  });
+
+  useEffect(() => {
+    const fetchUsageData = async () => {
+      try {
+        setLoading(true);
+        const response = await api.getUsage();
+        
+        if (response.success && response.data) {
+          const { plan, adsRemaining, adsUsedThisMonth, monthlyLimit, billingPeriodStart, billingPeriodEnd } = response.data;
+          const planInfo = PLAN_INFO[plan] || PLAN_INFO.starter;
+          const isUnlimited = monthlyLimit === -1;
+          
+          setUsageData({
+            currentPlan: plan,
+            planDisplayName: planInfo.name,
+            adsGeneratedThisMonth: adsUsedThisMonth,
+            monthlyLimit: isUnlimited ? 0 : monthlyLimit,
+            remainingThisMonth: isUnlimited ? -1 : adsRemaining,
+            periodStart: billingPeriodStart ? new Date(billingPeriodStart).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }) : null,
+            periodEnd: billingPeriodEnd ? new Date(billingPeriodEnd).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }) : null,
+            isUnlimited,
+          });
+        } else {
+          setError(response.message || "Failed to load usage data");
+        }
+      } catch (err) {
+        console.error("Error fetching usage data:", err);
+        setError("Failed to load usage data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsageData();
+  }, []);
 
   const availablePercentage =
-    usageData.monthlyLimit > 0
+    usageData.isUnlimited
+      ? 100
+      : usageData.monthlyLimit > 0
       ? Math.round(
           ((usageData.monthlyLimit - usageData.adsGeneratedThisMonth) /
             usageData.monthlyLimit) *
@@ -26,9 +96,49 @@ export default function UsagePage() {
       : 0;
 
   const progressPercentage =
-    usageData.monthlyLimit > 0
+    usageData.isUnlimited
+      ? 0
+      : usageData.monthlyLimit > 0
       ? (usageData.adsGeneratedThisMonth / usageData.monthlyLimit) * 100
       : 0;
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f]">
+        <header className="flex h-[73px] items-center border-b border-[#1a1a22] px-8">
+          <h1 className="text-lg font-semibold text-white">Ad Generator</h1>
+        </header>
+        <main className="px-12 py-8 lg:px-16">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f]">
+        <header className="flex h-[73px] items-center border-b border-[#1a1a22] px-8">
+          <h1 className="text-lg font-semibold text-white">Ad Generator</h1>
+        </header>
+        <main className="px-12 py-8 lg:px-16">
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-center">
+            <p className="text-red-400">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 rounded-lg bg-red-500/20 px-4 py-2 text-sm text-red-400 hover:bg-red-500/30"
+            >
+              Try Again
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -68,7 +178,7 @@ export default function UsagePage() {
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-2">
               <svg
-                className="h-5 w-5 text-purple-400"
+                className="h-5 w-5 text-[#6a4cff]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -84,8 +194,8 @@ export default function UsagePage() {
                 Current Plan
               </span>
             </div>
-            <span className="rounded-full bg-[#1a1a22] px-3 py-1 text-sm font-medium text-white">
-              {usageData.currentPlan}
+            <span className="rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-3 py-1 text-sm font-medium text-white">
+              {usageData.planDisplayName}
             </span>
           </div>
 
@@ -99,45 +209,57 @@ export default function UsagePage() {
                 <span className="text-3xl font-bold text-white">
                   {usageData.adsGeneratedThisMonth}
                 </span>
-                <span className="text-xl text-zinc-500">
-                  {" "}
-                  / {usageData.monthlyLimit}
-                </span>
+                {!usageData.isUnlimited && (
+                  <span className="text-xl text-zinc-500">
+                    {" "}
+                    / {usageData.monthlyLimit}
+                  </span>
+                )}
+                {usageData.isUnlimited && (
+                  <span className="text-xl text-zinc-500"> / Unlimited</span>
+                )}
               </div>
               {/* Progress Bar */}
-              <div className="h-2 w-full rounded-full bg-[#1a1a22]">
-                <div
-                  className="h-2 rounded-full bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899]"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-              </div>
+              {!usageData.isUnlimited && (
+                <div className="h-2 w-full rounded-full bg-[#1a1a22]">
+                  <div
+                    className="h-2 rounded-full bg-[#6a4cff]"
+                    style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                  />
+                </div>
+              )}
+              {usageData.isUnlimited && (
+                <div className="h-2 w-full rounded-full bg-[#6a4cff]" />
+              )}
             </div>
 
             {/* Remaining This Month */}
             <div>
               <p className="mb-2 text-sm text-zinc-400">Remaining This Month</p>
               <p className="text-3xl font-bold text-white mb-4">
-                {usageData.remainingThisMonth}
+                {usageData.isUnlimited ? "Unlimited" : usageData.remainingThisMonth}
               </p>
-              <Link
-                href="/pricing"
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
-              >
-                Upgrade Plan
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {!usageData.isUnlimited && (
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </Link>
+                  Upgrade Plan
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -146,7 +268,7 @@ export default function UsagePage() {
         <div className="mb-6 rounded-xl border border-[#1a1a22] bg-[#0d1117] p-6">
           <div className="flex items-center gap-2 mb-6">
             <svg
-              className="h-5 w-5 text-purple-400"
+              className="h-5 w-5 text-[#6a4cff]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -183,7 +305,7 @@ export default function UsagePage() {
         <div className="mb-6 rounded-xl border border-[#1a1a22] bg-[#0d1117] p-6">
           <div className="flex items-center gap-2 mb-6">
             <svg
-              className="h-5 w-5 text-purple-400"
+              className="h-5 w-5 text-[#6a4cff]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -203,7 +325,7 @@ export default function UsagePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Ads This Month */}
             <div className="rounded-lg bg-[#12121a] p-6 text-center">
-              <p className="text-4xl font-bold text-[#22d3ee] mb-2">
+              <p className="text-4xl font-bold text-[#6a4cff] mb-2">
                 {usageData.adsGeneratedThisMonth}
               </p>
               <p className="text-sm text-zinc-400">Ads This Month</p>
@@ -212,7 +334,7 @@ export default function UsagePage() {
             {/* Monthly Limit */}
             <div className="rounded-lg bg-[#12121a] p-6 text-center">
               <p className="text-4xl font-bold text-white mb-2">
-                {usageData.monthlyLimit}
+                {usageData.isUnlimited ? "∞" : usageData.monthlyLimit}
               </p>
               <p className="text-sm text-zinc-400">Monthly Limit</p>
             </div>
@@ -220,33 +342,44 @@ export default function UsagePage() {
             {/* Available */}
             <div className="rounded-lg bg-[#12121a] p-6 text-center">
               <p className="text-4xl font-bold text-white mb-2">
-                {availablePercentage}%
+                {usageData.isUnlimited ? "∞" : `${availablePercentage}%`}
               </p>
               <p className="text-sm text-zinc-400">Available</p>
             </div>
           </div>
         </div>
 
-        {/* Need More Ads CTA */}
-        <div className="rounded-xl bg-gradient-to-r from-[#a855f7] to-[#ec4899] p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold text-white">
-                Need more ads?
-              </h3>
-              <p className="text-sm text-white/70">
-                Upgrade your plan for unlimited ad generation.
-              </p>
+        
+
+        {/* Need More Ads CTA - Only show if not on unlimited plan */}
+        {!usageData.isUnlimited && (
+          <div className="rounded-xl bg-gradient-to-r from-[#a855f7] to-[#ec4899] p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white">
+                  Need more ads?
+                </h3>
+                <p className="text-sm text-white/70">
+                  Upgrade your plan for unlimited ad generation.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="inline-flex items-center justify-center rounded-lg bg-[#431A56] px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#5a2569]"
+              >
+                View Plans
+              </button>
             </div>
-            <Link
-              href="/pricing"
-              className="inline-flex items-center justify-center rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-white/20"
-            >
-              View Plans
-            </Link>
           </div>
-        </div>
+        )}
       </main>
+
+      {/* Upgrade Plan Modal */}
+      <UpgradePlanModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        currentPlan={usageData.currentPlan}
+      />
     </div>
   );
 }

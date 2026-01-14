@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { steps } from "@/lib/generateConstants";
 import { BannerLoading, BannerGrid } from "@/components/Banner";
 import PlanCard from "@/components/PlanCard";
+import { saveBanners, loadBanners, updateBanner as updateBannerStorage, clearBanners } from "@/lib/bannerStorage";
 
 interface Banner {
   id: number;
@@ -50,19 +51,16 @@ export default function BannersPage() {
         }
 
         // Check if banners were already generated (e.g., coming back from results page)
-        const cachedBanners = localStorage.getItem('generatedBanners');
-        if (cachedBanners) {
-          const parsedBanners = JSON.parse(cachedBanners);
-          if (parsedBanners.length > 0) {
-            setBanners(parsedBanners);
-            // Also restore selected banners
-            const cachedSelected = localStorage.getItem('selectedBannerIds');
-            if (cachedSelected) {
-              setSelectedBanners(JSON.parse(cachedSelected));
-            }
-            console.log('Loaded cached banners from localStorage');
-            return; // Skip regeneration
+        const cachedBanners = await loadBanners();
+        if (cachedBanners && cachedBanners.length > 0) {
+          setBanners(cachedBanners);
+          // Also restore selected banners
+          const cachedSelected = localStorage.getItem('selectedBannerIds');
+          if (cachedSelected) {
+            setSelectedBanners(JSON.parse(cachedSelected));
           }
+          console.log('Loaded cached banners from storage');
+          return; // Skip regeneration
         }
 
         setIsGenerating(true);
@@ -104,6 +102,8 @@ export default function BannersPage() {
 
         if (data.success && data.banners) {
           setBanners(data.banners);
+          // Save banners to storage (IndexedDB for images, localStorage for metadata)
+          await saveBanners(data.banners);
           console.log(`Generated ${data.generated} banners successfully`);
         } else {
           setGenerationError(data.error || 'Failed to generate banners');
@@ -140,20 +140,20 @@ export default function BannersPage() {
     });
   };
 
-  const handleBannerUpdate = (bannerId: number, updatedBanner: Banner) => {
+  const handleBannerUpdate = async (bannerId: number, updatedBanner: Banner) => {
     setBanners((prevBanners) => {
       const updated = prevBanners.map((banner) =>
         banner.id === bannerId ? updatedBanner : banner
       );
-      // Update localStorage with regenerated banner
-      localStorage.setItem('generatedBanners', JSON.stringify(updated));
+      // Update storage with regenerated banner
+      saveBanners(updated).catch(console.error);
       return updated;
     });
   };
 
-  const handleSaveAndContinue = () => {
-    // Save generated banners to localStorage for the results page
-    localStorage.setItem('generatedBanners', JSON.stringify(banners));
+  const handleSaveAndContinue = async () => {
+    // Save generated banners to storage for the results page
+    await saveBanners(banners);
     localStorage.setItem('selectedBannerIds', JSON.stringify(selectedBanners));
     
     // Navigate to results page
@@ -162,7 +162,7 @@ export default function BannersPage() {
 
   const handleRegenerateAll = async () => {
     // Clear cached banners
-    localStorage.removeItem('generatedBanners');
+    await clearBanners();
     localStorage.removeItem('selectedBannerIds');
     setSelectedBanners([]);
     setGenerationError(null);
@@ -214,6 +214,8 @@ export default function BannersPage() {
 
       if (data.success && data.banners) {
         setBanners(data.banners);
+        // Save regenerated banners to storage
+        await saveBanners(data.banners);
         console.log(`Regenerated ${data.generated} banners successfully`);
       } else {
         setGenerationError(data.error || 'Failed to regenerate banners');

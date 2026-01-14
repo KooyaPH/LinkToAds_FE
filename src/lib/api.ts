@@ -209,6 +209,42 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // Usage & Token endpoints
+  async getUsage(): Promise<ApiResponse<{
+    plan: string;
+    adsRemaining: number;
+    adsUsedThisMonth: number;
+    monthlyLimit: number;
+    billingPeriodStart: string | null;
+    billingPeriodEnd: string | null;
+  }>> {
+    return this.request('/auth/usage');
+  }
+
+  async checkTokens(count: number): Promise<ApiResponse<{
+    canGenerate: boolean;
+    adsRemaining: number;
+    monthlyLimit: number;
+    requested: number;
+    message?: string;
+  }>> {
+    return this.request('/campaign/check-tokens', {
+      method: 'POST',
+      body: JSON.stringify({ count }),
+    });
+  }
+
+  async getPlans(): Promise<ApiResponse<{
+    plans: Array<{
+      id: string;
+      name: string;
+      adsPerMonth: number;
+      price: number;
+    }>;
+  }>> {
+    return this.request('/auth/plans');
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);
