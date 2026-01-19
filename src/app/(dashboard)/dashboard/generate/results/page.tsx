@@ -498,12 +498,16 @@ export default function ResultsPage() {
     setSaveStatus({ type: null, message: '' });
 
     try {
-      // Prepare ads data with images and captions
-      const adsToSave = successfulBanners.map((banner, index) => ({
-        image: banner.image!,
-        caption: generateAdCopy(banner, index),
-        title: `${brandName} - Ad ${index + 1}`,
-      }));
+      // Prepare ads data with images, captions, and title/subtitle from the card caption
+      const adsToSave = successfulBanners.map((banner, index) => {
+        const captionObj = generateCaption(banner, index);
+        return {
+          image: banner.image!,
+          caption: generateAdCopy(banner, index),
+          title: captionObj.header || `${brandName} - Ad ${index + 1}`,
+          subtitle: captionObj.main || null,
+        };
+      });
 
       // Save campaign via backend API with project info and strategy analysis
       const result = await api.saveCampaign(adsToSave, {

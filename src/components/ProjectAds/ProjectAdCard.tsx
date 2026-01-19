@@ -7,6 +7,7 @@ import Toast from "@/components/Toast";
 export interface Ad {
   id: string;
   title: string;
+  subtitle?: string | null;
   content: string;
   image_url: string;
   platform: string;
@@ -218,11 +219,13 @@ export default function ProjectAdCard({
         <div className="px-4 py-3 border-b border-[#141533]">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
+              {/* Title (saved from caption.header) */}
               <p className="text-zinc-400 text-xs uppercase mb-1 truncate">
-                {ad.title.toUpperCase().substring(0, 30)}...
+                {ad.title?.toUpperCase().substring(0, 30)}...
               </p>
+              {/* Subtitle (saved from caption.main) */}
               <h4 className="text-white font-semibold text-sm leading-tight line-clamp-2">
-                {ad.title}
+                {ad.subtitle || ad.title}
               </h4>
             </div>
             <button className="flex-shrink-0 px-4 py-1.5 rounded-lg bg-[#0d1117] border border-[#141533] text-white text-xs font-medium hover:bg-[#141533] transition-colors">

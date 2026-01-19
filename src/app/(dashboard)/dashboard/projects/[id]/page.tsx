@@ -211,13 +211,15 @@ export default function ProjectDetailPage() {
               {/* Strategy Analysis Card */}
               {(project.usp || project.target_audience || project.current_offer || project.brand_tone) && (
                 <div className="mt-6 rounded-xl border border-[#1a1a22] bg-[#0d1117] p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Strategy Analysis</h3>
+                  <h3 className="text-xl sm:text-2xl font-semibold text-white mb-4">Strategy Analysis</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* USP */}
                     {project.usp && (
                       <div>
-                        <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">USP</p>
-                        <p className="text-sm text-white leading-relaxed">
+                        <p className="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-[0.18em] mb-1.5">
+                          USP
+                        </p>
+                        <p className="text-sm sm:text-base text-zinc-100 leading-relaxed sm:leading-7">
                           {project.usp}
                         </p>
                       </div>
@@ -226,8 +228,10 @@ export default function ProjectDetailPage() {
                     {/* Target Audience */}
                     {project.target_audience && (
                       <div>
-                        <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Target Audience</p>
-                        <p className="text-sm text-white leading-relaxed">
+                        <p className="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-[0.18em] mb-1.5">
+                          Target Audience
+                        </p>
+                        <p className="text-sm sm:text-base text-zinc-100 leading-relaxed sm:leading-7">
                           {project.target_audience}
                         </p>
                       </div>
@@ -236,8 +240,10 @@ export default function ProjectDetailPage() {
                     {/* Current Offer */}
                     {project.current_offer && (
                       <div>
-                        <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Current Offer</p>
-                        <p className="text-sm text-white leading-relaxed">
+                        <p className="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-[0.18em] mb-1.5">
+                          Current Offer
+                        </p>
+                        <p className="text-sm sm:text-base text-zinc-100 leading-relaxed sm:leading-7">
                           {project.current_offer}
                         </p>
                       </div>
@@ -246,8 +252,10 @@ export default function ProjectDetailPage() {
                     {/* Brand Tone */}
                     {project.brand_tone && (
                       <div>
-                        <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Brand Tone</p>
-                        <p className="text-sm text-white leading-relaxed">
+                        <p className="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-[0.18em] mb-1.5">
+                          Brand Tone
+                        </p>
+                        <p className="text-sm sm:text-base text-zinc-100 leading-relaxed sm:leading-7">
                           {project.brand_tone}
                         </p>
                       </div>

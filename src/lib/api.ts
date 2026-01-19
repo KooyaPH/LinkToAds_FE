@@ -142,7 +142,7 @@ class ApiClient {
 
   // Campaign endpoints
   async saveCampaign(
-    ads: Array<{ image: string; caption: string; title?: string }>,
+    ads: Array<{ image: string; caption: string; title?: string; subtitle?: string | null }>,
     projectInfo?: { 
       name: string; 
       url?: string;
@@ -209,6 +209,7 @@ class ApiClient {
     ads: Array<{
       id: string;
       title: string;
+      subtitle: string | null;
       content: string;
       image_url: string;
       platform: string;

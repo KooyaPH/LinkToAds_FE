@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSidebar } from "@/components/Sidebar/SidebarContext";
 import { api } from "@/lib/api";
+import Toast from "@/components/Toast";
 
 interface Project {
   id: string;
@@ -26,6 +27,7 @@ export default function ProjectsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showToast, setShowToast] = useState(false);
 
   // Fetch projects on mount
   useEffect(() => {
@@ -51,15 +53,12 @@ export default function ProjectsPage() {
 
   // Handle project deletion
   const handleDelete = async (projectId: string) => {
-    if (!confirm("Are you sure you want to delete this project? This will also delete all associated ads.")) {
-      return;
-    }
-
     try {
       setDeletingId(projectId);
       const response = await api.deleteProject(projectId);
       if (response.success) {
         setProjects(projects.filter((p) => p.id !== projectId));
+        setShowToast(true);
       } else {
         alert(response.message || "Failed to delete project");
       }
@@ -493,6 +492,15 @@ export default function ProjectsPage() {
           </div>
         )}
       </main>
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message="Project Deleted"
+        onClose={() => setShowToast(false)}
+        duration={3000}
+        position="top-right"
+      />
     </div>
   );
 }
