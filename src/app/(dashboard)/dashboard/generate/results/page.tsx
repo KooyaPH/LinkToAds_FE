@@ -52,6 +52,7 @@ export default function ResultsPage() {
   const [regeneratingBannerId, setRegeneratingBannerId] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
+  const [bannerCount, setBannerCount] = useState<number>(3);
   const [planData, setPlanData] = useState({
     plan: "Starter Pack",
     adsThisMonth: 0,
@@ -378,7 +379,24 @@ export default function ResultsPage() {
   }, [extractedData, banners.length]); // Only regenerate if extractedData or banner count changes
 
   const successfulBanners = banners.filter(b => b.image);
-  const bannerCount = successfulBanners.length || (typeof window !== 'undefined' ? parseInt(localStorage.getItem('requestedAdsCount') || '3', 10) : 3);
+
+  // Update banner count on client after banners/extracted data are ready
+  useEffect(() => {
+    // Prefer actual generated banners
+    if (successfulBanners.length > 0) {
+      setBannerCount(successfulBanners.length);
+      return;
+    }
+
+    // Fallback to requestedAdsCount from localStorage (client-only)
+    if (typeof window !== "undefined") {
+      const storedCount = window.localStorage.getItem("requestedAdsCount");
+      const parsed = storedCount ? parseInt(storedCount, 10) : NaN;
+      if (!Number.isNaN(parsed) && parsed > 0) {
+        setBannerCount(parsed);
+      }
+    }
+  }, [successfulBanners.length]);
   
   // Get brand name from extracted data
   const brandName = extractedData?.productInfo?.productName || "Your Brand";
