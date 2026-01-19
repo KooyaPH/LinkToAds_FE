@@ -218,7 +218,7 @@ export default function UpgradePlanModal({
           {/* Pricing Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {/* Starter Pack */}
-            <div className="relative rounded-xl border border-[#1a1a22] bg-[#12121a] p-6">
+            <div className="relative rounded-xl border border-[#1a1a22] bg-[#12121a] p-6 flex flex-col">
               <div className="mb-4">
                 <h3 className="text-lg font-bold text-white mb-2">Starter Pack</h3>
                 <div className="flex items-baseline gap-1">
@@ -277,14 +277,14 @@ export default function UpgradePlanModal({
                   <span className="text-sm text-white">Never expires</span>
                 </li>
               </ul>
-              <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all">
+              <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all mt-auto">
                 Select
               </button>
             </div>
 
             {/* Creator - Current Plan */}
             <div
-              className={`relative rounded-xl border-2 p-6 ${
+              className={`relative rounded-xl border-2 p-6 flex flex-col ${
                 currentPlan === "creator"
                   ? "border-[#6a4cff] bg-[#12121a]"
                   : "border-[#1a1a22] bg-[#12121a]"
@@ -374,18 +374,18 @@ export default function UpgradePlanModal({
                 </li>
               </ul>
               {currentPlan === "creator" ? (
-                <button className="w-full rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-all">
+                <button className="w-full rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-all mt-auto">
                   Current Plan
                 </button>
               ) : (
-                <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all">
+                <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all mt-auto">
                   Select
                 </button>
               )}
             </div>
 
             {/* Business */}
-            <div className="relative rounded-xl border border-[#1a1a22] bg-[#12121a] p-6">
+            <div className="relative rounded-xl border border-[#1a1a22] bg-[#12121a] p-6 flex flex-col">
               <div className="mb-4">
                 <h3 className="text-lg font-bold text-white mb-2">Business</h3>
                 {(() => {
@@ -462,13 +462,13 @@ export default function UpgradePlanModal({
                   <span className="text-sm text-white">Priority Rendering</span>
                 </li>
               </ul>
-              <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all">
+              <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all mt-auto">
                 Select
               </button>
             </div>
 
             {/* Agency */}
-            <div className="relative rounded-xl border border-[#1a1a22] bg-[#12121a] p-6">
+            <div className="relative rounded-xl border border-[#1a1a22] bg-[#12121a] p-6 flex flex-col">
               <div className="mb-4">
                 <h3 className="text-lg font-bold text-white mb-2">Agency</h3>
                 {(() => {
@@ -545,7 +545,7 @@ export default function UpgradePlanModal({
                   <span className="text-sm text-white">API Access</span>
                 </li>
               </ul>
-              <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all">
+              <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all mt-auto">
                 Select
               </button>
             </div>

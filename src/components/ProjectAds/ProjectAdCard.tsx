@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
+import Toast from "@/components/Toast";
 
 export interface Ad {
   id: string;
@@ -58,15 +59,6 @@ export default function ProjectAdCard({
     }, 2000);
   };
 
-  // Auto-hide toast after 3 seconds
-  useEffect(() => {
-    if (showToast) {
-      const timer = setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showToast]);
 
   // Handle download image
   const handleDownloadImage = async () => {
@@ -331,30 +323,13 @@ export default function ProjectAdCard({
       </div>
 
       {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-4 right-4 z-50 animate-slide-down-up">
-          <div className="bg-[#0a0a0f] border border-[#141533] rounded-lg px-4 py-3 flex items-center gap-3 shadow-lg min-w-[320px]">
-            {/* Checkmark Icon */}
-            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white flex items-center justify-center">
-              <svg
-                className="w-4 h-4 text-[#0a0a0f]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={3}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            {/* Toast Text */}
-            <span className="text-white text-sm font-medium">Ad text copied!</span>
-          </div>
-        </div>
-      )}
+      <Toast
+        show={showToast}
+        message="Ad text copied!"
+        onClose={() => setShowToast(false)}
+        duration={3000}
+        position="top-right"
+      />
     </div>
   );
 }

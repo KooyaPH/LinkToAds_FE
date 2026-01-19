@@ -7,6 +7,15 @@ import { steps } from "@/lib/generateConstants";
 import { BannerLoading, BannerGrid } from "@/components/Banner";
 import PlanCard from "@/components/PlanCard";
 import { saveBanners, loadBanners, updateBanner as updateBannerStorage, clearBanners } from "@/lib/bannerStorage";
+import { api } from "@/lib/api";
+
+// Plan display names
+const PLAN_INFO: Record<string, { name: string }> = {
+  starter: { name: "Starter Pack" },
+  creator: { name: "Creator" },
+  business: { name: "Business" },
+  agency: { name: "Agency" },
+};
 
 interface Banner {
   id: number;
@@ -25,12 +34,15 @@ export default function BannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [brandColors, setBrandColors] = useState<string[]>(["#d7be70", "#2f46c3", "#e9ce76"]); // Default colors
   const [generationError, setGenerationError] = useState<string | null>(null);
-
-  const planData = {
-    plan: "Pro",
-    adsThisMonth: 12,
-    limit: 200,
-  };
+  const [planData, setPlanData] = useState<{
+    plan: string;
+    adsThisMonth: number;
+    limit: number;
+  }>({
+    plan: "Starter Pack",
+    adsThisMonth: 0,
+    limit: 5,
+  });
 
   // Generate banners on mount (or load from cache if already generated)
   useEffect(() => {
@@ -125,6 +137,29 @@ export default function BannersPage() {
     if (!savedCount) {
       localStorage.setItem('selectedBannersCount', '0');
     }
+  }, []);
+
+  // Fetch plan data on mount
+  useEffect(() => {
+    const fetchPlanData = async () => {
+      try {
+        const usageResponse = await api.getUsage();
+        if (usageResponse.success && usageResponse.data) {
+          const { plan, adsUsedThisMonth, monthlyLimit } = usageResponse.data;
+          const planInfo = PLAN_INFO[plan] || PLAN_INFO.starter;
+          
+          setPlanData({
+            plan: planInfo.name,
+            adsThisMonth: adsUsedThisMonth || 0,
+            limit: monthlyLimit === -1 ? Infinity : monthlyLimit,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch plan data:", err);
+      }
+    };
+
+    fetchPlanData();
   }, []);
 
   const toggleBannerSelection = (index: number) => {

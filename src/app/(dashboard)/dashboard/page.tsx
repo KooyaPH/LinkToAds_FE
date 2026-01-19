@@ -7,20 +7,34 @@ import { api } from "@/lib/api";
 import { RecentProjectCard, type Project } from "@/components/RecentProjectCard";
 import { NewCampaignCard } from "@/components/NewCampaignCard";
 
+// Plan display names
+const PLAN_INFO: Record<string, { name: string }> = {
+  starter: { name: "Starter Pack" },
+  creator: { name: "Creator" },
+  business: { name: "Business" },
+  agency: { name: "Agency" },
+};
+
 export default function DashboardPage() {
   const { open } = useSidebar();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({ campaigns: 0, adsGenerated: 0 });
+  const [planData, setPlanData] = useState<{ name: string; isUnlimited: boolean }>({
+    name: "Starter Pack",
+    isUnlimited: false,
+  });
 
-  // Fetch projects on mount
+  // Fetch projects and plan data on mount
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await api.getProjects();
-        if (response.success && response.data) {
-          const projectsList = response.data.projects || [];
+        
+        // Fetch projects
+        const projectsResponse = await api.getProjects();
+        if (projectsResponse.success && projectsResponse.data) {
+          const projectsList = projectsResponse.data.projects || [];
           setProjects(projectsList);
           
           // Calculate stats
@@ -30,14 +44,27 @@ export default function DashboardPage() {
             adsGenerated: totalAds,
           });
         }
+
+        // Fetch plan data
+        const usageResponse = await api.getUsage();
+        if (usageResponse.success && usageResponse.data) {
+          const { plan, monthlyLimit } = usageResponse.data;
+          const planInfo = PLAN_INFO[plan] || PLAN_INFO.starter;
+          const isUnlimited = monthlyLimit === -1;
+          
+          setPlanData({
+            name: planInfo.name,
+            isUnlimited,
+          });
+        }
       } catch (err) {
-        console.error("Failed to fetch projects:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchProjects();
+    fetchData();
   }, []);
 
   // Get recent projects (up to 3)
@@ -174,10 +201,12 @@ export default function DashboardPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-lg font-bold text-white">Agency</p>
-                  <span className="rounded-full bg-zinc-700 px-2.5 py-0.5 text-xs font-medium text-white">
-                    Unlimited
-                  </span>
+                  <p className="text-lg font-bold text-white">{planData.name}</p>
+                  {planData.isUnlimited && (
+                    <span className="rounded-full bg-zinc-700 px-2.5 py-0.5 text-xs font-medium text-white">
+                      Unlimited
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-zinc-400">Current Plan</p>
               </div>

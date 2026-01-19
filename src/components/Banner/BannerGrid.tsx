@@ -23,6 +23,16 @@ export default function BannerGrid({
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenerationError, setRegenerationError] = useState<string | null>(null);
 
+  // Helper to check if an image URL is an SVG
+  const isSvgImage = (url: string): boolean => {
+    if (!url) return false;
+    const lowerUrl = url.toLowerCase();
+    // Check URL extension or data URL mime type
+    return lowerUrl.endsWith('.svg') || 
+           lowerUrl.includes('image/svg') || 
+           lowerUrl.startsWith('data:image/svg');
+  };
+
   // Load product images from localStorage
   useEffect(() => {
     try {
@@ -30,9 +40,13 @@ export default function BannerGrid({
       if (storedData) {
         const data = JSON.parse(storedData);
         if (data.images && Array.isArray(data.images)) {
-          // Filter for product images or use all images
+          // Filter for product images, excluding SVGs (not supported by Gemini API)
           const images = data.images
-            .filter((img: { type?: string }) => !img.type || img.type === 'product' || img.type === 'image')
+            .filter((img: { type?: string; src: string }) => {
+              const isValidType = !img.type || img.type === 'product' || img.type === 'image';
+              const isNotSvg = !isSvgImage(img.src);
+              return isValidType && isNotSvg;
+            })
             .map((img: { src: string; alt: string; type?: string }) => ({
               src: img.src,
               alt: img.alt || 'Product image',
@@ -108,13 +122,31 @@ export default function BannerGrid({
       const extractedData = JSON.parse(storedData);
       const brandAssets = brandAssetsData ? JSON.parse(brandAssetsData) : {};
 
+      // Filter out any SVG images from existing brand assets
+      if (brandAssets.selectedProductImage && isSvgImage(brandAssets.selectedProductImage)) {
+        console.warn('Removing SVG product image from brand assets');
+        delete brandAssets.selectedProductImage;
+      }
+      if (brandAssets.selectedLogo && isSvgImage(brandAssets.selectedLogo)) {
+        console.warn('Removing SVG logo from brand assets');
+        delete brandAssets.selectedLogo;
+      }
+      if (brandAssets.logo && isSvgImage(brandAssets.logo)) {
+        console.warn('Removing SVG logo from brand assets');
+        delete brandAssets.logo;
+      }
+
       // Merge uploaded assets with existing brand assets
       if (uploadedAssets) {
-        if (uploadedAssets.productImage) {
+        if (uploadedAssets.productImage && !isSvgImage(uploadedAssets.productImage)) {
           brandAssets.selectedProductImage = uploadedAssets.productImage;
+        } else if (uploadedAssets.productImage) {
+          console.warn('Uploaded product image is SVG, ignoring');
         }
-        if (uploadedAssets.logo) {
+        if (uploadedAssets.logo && !isSvgImage(uploadedAssets.logo)) {
           brandAssets.selectedLogo = uploadedAssets.logo;
+        } else if (uploadedAssets.logo) {
+          console.warn('Uploaded logo is SVG, ignoring');
         }
       }
 

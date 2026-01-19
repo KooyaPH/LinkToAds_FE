@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Toast from "@/components/Toast";
 
 interface AdCardProps {
   banner: {
@@ -19,6 +20,7 @@ interface AdCardProps {
   };
   onCopy?: () => void;
   onRegenerate?: () => void;
+  onRegenerateCopy?: () => void;
   onDownload?: () => void;
   isEditingMode?: boolean;
   onAdCopyChange?: (bannerId: number, newCopy: string) => void;
@@ -32,6 +34,7 @@ export default function AdCard({
   caption,
   onCopy,
   onRegenerate,
+  onRegenerateCopy,
   onDownload,
   isEditingMode = false,
   onAdCopyChange,
@@ -39,6 +42,8 @@ export default function AdCard({
   const [showSeeMore, setShowSeeMore] = useState(false);
   const [isEditingText, setIsEditingText] = useState(false);
   const [editedCopy, setEditedCopy] = useState(adCopy);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("Ad text copied!");
   const RECOMMENDED_CHAR_LIMIT = 125;
   
   // Sync editedCopy when adCopy prop changes
@@ -55,7 +60,7 @@ export default function AdCard({
   };
   
   const finalCaption = caption || defaultCaption;
-  const displayCopy = showSeeMore ? adCopy : adCopy.substring(0, 120) + "...";
+  const displayCopy = showSeeMore ? adCopy : (adCopy.length > 120 ? adCopy.substring(0, 120) + "..." : adCopy);
   
   // Handle text click - only enable editing if editing mode is on
   const handleTextClick = () => {
@@ -81,6 +86,30 @@ export default function AdCard({
   
   const charCount = editedCopy.length;
   const isOverLimit = charCount > RECOMMENDED_CHAR_LIMIT;
+
+  // Handle copy button click
+  const handleCopy = () => {
+    // Copy ad copy to clipboard
+    navigator.clipboard.writeText(adCopy);
+    // Show toast
+    setToastMessage("Ad text copied!");
+    setShowToast(true);
+    // Call the onCopy callback if provided
+    onCopy?.();
+  };
+
+  // Handle regenerate button click
+  const handleRegenerate = () => {
+    // Show toast
+    setToastMessage("Regenerated Ad Copy!");
+    setShowToast(true);
+    // Call the regenerate callback
+    if (onRegenerateCopy) {
+      onRegenerateCopy();
+    } else if (onRegenerate) {
+      onRegenerate();
+    }
+  };
 
   // Get first letter of brand name for avatar
   const avatarLetter = brandName.charAt(0).toUpperCase();
@@ -312,7 +341,7 @@ export default function AdCard({
       {/* Action Buttons */}
       <div className="px-4 py-3 flex items-center gap-2">
         <button
-          onClick={onCopy}
+          onClick={handleCopy}
           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0d1117] border border-[#141533] text-white text-sm font-medium hover:bg-[#141533] transition-colors"
         >
           <svg
@@ -331,7 +360,7 @@ export default function AdCard({
           Copy
         </button>
         <button
-          onClick={onRegenerate}
+          onClick={handleRegenerate}
           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0d1117] border border-[#141533] text-white text-sm font-medium hover:border-[#6666FF] transition-colors relative group"
         >
           <svg
@@ -383,6 +412,15 @@ export default function AdCard({
         </button>
       </div>
       </div>
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        onClose={() => setShowToast(false)}
+        duration={3000}
+        position="top-right"
+      />
     </div>
   );
 }

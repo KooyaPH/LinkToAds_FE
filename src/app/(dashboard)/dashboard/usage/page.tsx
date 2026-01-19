@@ -194,7 +194,7 @@ export default function UsagePage() {
                 Current Plan
               </span>
             </div>
-            <span className="rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-3 py-1 text-sm font-medium text-white">
+            <span className="rounded-full bg-zinc-700 border border-zinc-600 px-2.5 py-0.5 text-xs font-medium text-white">
               {usageData.planDisplayName}
             </span>
           </div>

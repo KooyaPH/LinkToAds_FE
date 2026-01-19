@@ -119,6 +119,15 @@ export default function StrategyPage() {
   const [logoError, setLogoError] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
+  // Helper to check if an image URL is an SVG (not supported by Gemini API)
+  const isSvgImage = (url: string): boolean => {
+    if (!url) return false;
+    const lowerUrl = url.toLowerCase();
+    return lowerUrl.endsWith('.svg') || 
+           lowerUrl.includes('image/svg') || 
+           lowerUrl.startsWith('data:image/svg');
+  };
+
   // Load extracted data from localStorage on mount
   useEffect(() => {
     const loadExtractedData = () => {
@@ -169,10 +178,14 @@ export default function StrategyPage() {
             });
           }
           if (data.images) {
-            setExtractedImages(data.images);
+            // Filter out SVG images (not supported by Gemini API)
+            const filteredImages = data.images.filter((img: { src: string }) => !isSvgImage(img.src));
+            setExtractedImages(filteredImages);
           }
-          if (data.logo) {
+          if (data.logo && !isSvgImage(data.logo)) {
             setExtractedLogo(data.logo);
+          } else if (data.logo) {
+            console.warn('Logo is an SVG, which is not supported by the image generation API');
           }
 
           setIsLoading(false);
@@ -1699,8 +1712,8 @@ export default function StrategyPage() {
                     productImageUrl?: string;
                   } = {};
 
-                  // Save selected product photo if any
-                  if (selectedProductPhoto !== null && extractedImages[selectedProductPhoto]) {
+                  // Save selected product photo if any (excluding SVG which is not supported)
+                  if (selectedProductPhoto !== null && extractedImages[selectedProductPhoto] && !isSvgImage(extractedImages[selectedProductPhoto].src)) {
                     const selectedImage = extractedImages[selectedProductPhoto];
                     brandAssets.productImageUrl = selectedImage.src;
                     // Convert to base64 for the API
@@ -1719,8 +1732,8 @@ export default function StrategyPage() {
                     }
                   }
 
-                  // Save selected logo if any
-                  if (extractedLogo && !logoError) {
+                  // Save selected logo if any (excluding SVG which is not supported)
+                  if (extractedLogo && !logoError && !isSvgImage(extractedLogo)) {
                     brandAssets.selectedLogo = extractedLogo;
                   }
 

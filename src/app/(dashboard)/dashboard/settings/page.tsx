@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import { useSidebar } from "@/components/Sidebar/SidebarContext";
 import { api } from "@/lib/api";
 import { signOutSupabase } from "@/lib/supabase";
+            import UpgradePlanModal from "@/components/UpgradePlanModal";
 
 export default function SettingsPage() {
   const { open } = useSidebar();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [userData, setUserData] = useState({
     email: "",
@@ -49,6 +51,32 @@ export default function SettingsPage() {
           router.push("/login");
         }
       }
+
+      // Fetch usage data
+      try {
+        const usageResponse = await api.getUsage();
+        if (usageResponse.success && usageResponse.data) {
+          const { plan, adsRemaining, adsUsedThisMonth, monthlyLimit } = usageResponse.data;
+          const planNames: Record<string, string> = {
+            starter: "Starter Pack",
+            creator: "Creator",
+            business: "Business",
+            agency: "Agency",
+          };
+          
+          const remaining = adsRemaining === -1 ? Infinity : adsRemaining;
+          setUserData((prev) => ({
+            ...prev,
+            plan: planNames[plan] || plan,
+            monthlyUsage: adsUsedThisMonth,
+            monthlyLimit: monthlyLimit === -1 ? Infinity : monthlyLimit,
+            remainingAds: remaining === Infinity ? "Unlimited" : `${remaining} ads`,
+          }));
+        }
+      } catch (err) {
+        console.error("Error fetching usage data:", err);
+      }
+
       setIsLoading(false);
     };
 
@@ -105,7 +133,7 @@ export default function SettingsPage() {
       {/* Main Content */}
       <main className="px-12 py-8 lg:px-16">
         {/* Page Title */}
-        <h2 className="mb-8 text-2xl font-bold bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
+        <h2 className="mb-8 text-2xl font-bold text-white">
           Settings
         </h2>
 
@@ -174,7 +202,7 @@ export default function SettingsPage() {
           <div className="flex items-start justify-between mb-1">
             <div className="flex items-center gap-2">
               <svg
-                className="h-5 w-5 text-purple-400"
+                className="h-5 w-5 text-[#6a4cff]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -190,7 +218,7 @@ export default function SettingsPage() {
                 Subscription
               </span>
             </div>
-            <span className="rounded-full bg-[#1a1a22] px-3 py-1 text-sm font-medium text-white">
+            <span className="rounded-full bg-[#101827] border border-[#202a3a] px-3 py-1 text-sm font-bold text-white">
               {userData.plan}
             </span>
           </div>
@@ -199,25 +227,61 @@ export default function SettingsPage() {
           </p>
 
           {/* Monthly Usage */}
-          <div className="flex items-center justify-between py-3 border-b border-[#1a1a22]">
-            <span className="text-sm font-medium text-white">Monthly Usage</span>
-            <span className="text-sm text-zinc-400">
-              {userData.monthlyUsage} / {userData.monthlyLimit === Infinity ? "∞" : userData.monthlyLimit} ads
-            </span>
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-white">Monthly Usage</span>
+              <span className="text-sm text-zinc-400">
+                {userData.monthlyUsage} / {userData.monthlyLimit === Infinity ? "∞" : userData.monthlyLimit} ads
+              </span>
+            </div>
+            {/* Progress Bar */}
+            <div className="h-2 w-full rounded-full bg-[#1a1a22]">
+              <div
+                className="h-2 rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899]"
+                style={{
+                  width: `${userData.monthlyLimit === Infinity ? 0 : Math.min((userData.monthlyUsage / userData.monthlyLimit) * 100, 100)}%`,
+                }}
+              />
+            </div>
           </div>
 
           {/* Remaining This Month */}
-          <div className="py-4">
-            <p className="text-sm font-medium text-white mb-1">
-              Remaining This Month
-            </p>
-            <p className="text-sm text-zinc-400">{userData.remainingAds}</p>
+          <div className="flex items-start justify-between py-4 border-b border-[#1a1a22]">
+            <div>
+              <p className="text-sm font-medium text-white mb-1">
+                Remaining This Month
+              </p>
+              <p className="text-sm text-zinc-400">
+                {userData.monthlyLimit === Infinity
+                  ? "Unlimited ads remaining"
+                  : `${userData.monthlyLimit - userData.monthlyUsage} ads remaining`}
+              </p>
+            </div>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-4 py-2 text-sm font-semibold text-white transition-all hover:opacity-90"
+            >
+              Upgrade
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </button>
           </div>
 
-          {/* View Detailed Usage Button */}
+          {/* View Usage Button */}
           <Link
             href="/dashboard/usage"
-            className="flex items-center justify-center gap-2 w-full rounded-lg border border-[#1a1a22] bg-[#0a0a0f] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#12121a]"
+            className="flex items-center justify-center gap-2 w-full rounded-lg border border-[#1a1a22] bg-[#0a0a0f] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#12121a] mt-4"
           >
             <svg
               className="h-4 w-4"
@@ -229,10 +293,10 @@ export default function SettingsPage() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            View Detailed Usage
+            View Usage
           </Link>
         </div>
 
@@ -253,6 +317,22 @@ export default function SettingsPage() {
           </button>
         </div>
       </main>
+
+      {/* Upgrade Plan Modal */}
+      <UpgradePlanModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        currentPlan={(() => {
+          const planMap: Record<string, string> = {
+            "Starter Pack": "starter",
+            "Creator": "creator",
+            "Business": "business",
+            "Agency": "agency",
+            "Free": "starter",
+          };
+          return planMap[userData.plan] || "starter";
+        })()}
+      />
     </div>
   );
 }

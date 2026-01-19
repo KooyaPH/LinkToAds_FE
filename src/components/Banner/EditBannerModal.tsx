@@ -47,6 +47,9 @@ export default function EditBannerModal({
     }
   }, [isOpen, isRegenerating]);
 
+  // Supported image types (Gemini API doesn't support SVG)
+  const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
   // Handle file upload for product image
   const handleProductImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -57,10 +60,16 @@ export default function EditBannerModal({
       return;
     }
 
+    if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+      setError('SVG files are not supported. Please upload a JPG, PNG, GIF, or WebP image.');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setUploadedProductImage(reader.result as string);
       setSelectedProductImageIndex(null); // Clear selected product image
+      setError(null);
     };
     reader.onerror = () => {
       setError('Failed to read image file');
@@ -78,9 +87,15 @@ export default function EditBannerModal({
       return;
     }
 
+    if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+      setError('SVG files are not supported. Please upload a JPG, PNG, GIF, or WebP image.');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setUploadedLogo(reader.result as string);
+      setError(null);
     };
     reader.onerror = () => {
       setError('Failed to read logo file');
@@ -389,7 +404,7 @@ export default function EditBannerModal({
                 <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#141533] bg-[#0d1117] text-white text-sm font-medium hover:bg-[#141533] transition-colors cursor-pointer inline-flex">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                     onChange={handleProductImageUpload}
                     className="hidden"
                     disabled={isRegenerating}
@@ -525,7 +540,7 @@ export default function EditBannerModal({
               <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#141533] bg-[#0d1117] text-white text-sm font-medium hover:bg-[#141533] transition-colors mb-4 cursor-pointer inline-flex">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                   onChange={handleLogoUpload}
                   className="hidden"
                   disabled={isRegenerating}

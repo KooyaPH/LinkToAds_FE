@@ -204,6 +204,43 @@ export default function ResultsPage() {
     router.push('/dashboard/generate/banners');
   };
 
+  const handleRegenerateCopy = (bannerId: number, currentIndex: number) => {
+    if (!extractedData) {
+      return;
+    }
+
+    const productName = extractedData.productInfo?.productName || "our product";
+    const description = extractedData.aiInsights?.businessDescription || "";
+    const usp = extractedData.aiInsights?.uniqueSellingProposition || "";
+    const targetAudience = extractedData.aiInsights?.targetAudience || "";
+
+    const copyOptions = [
+      `Imagine a future where ${targetAudience ? targetAudience.toLowerCase() : "you"} don't have to worry about ${productName.toLowerCase()}. ${productName} helps you ${usp.toLowerCase() || "achieve your goals"} with ease and confidence.`,
+      `Discover ${productName} - ${description.substring(0, 100)}${description.length > 100 ? "..." : ""}`,
+      `Looking for ${productName.toLowerCase()}? ${productName} offers ${usp.toLowerCase() || "premium quality"} designed specifically for ${targetAudience.toLowerCase() || "you"}. Experience the difference today.`,
+      `Transform your life with ${productName}. ${usp || "Our innovative solution"} helps ${targetAudience.toLowerCase() || "you"} achieve ${productName.toLowerCase()} goals faster and easier than ever before.`,
+      `${productName} is the solution you've been waiting for. ${usp || "Experience premium quality"} designed for ${targetAudience.toLowerCase() || "you"}. Start your journey today.`,
+      `Join thousands who have transformed their lives with ${productName}. ${usp || "Discover the difference"} and see why ${targetAudience.toLowerCase() || "customers"} choose us.`,
+    ];
+
+    // Get a random copy option that's different from the current one
+    const currentCopy = generateAdCopy(successfulBanners.find(b => b.id === bannerId) || successfulBanners[0], currentIndex);
+    let newCopy = copyOptions[Math.floor(Math.random() * copyOptions.length)];
+    
+    // Try to get a different copy (up to 5 attempts)
+    let attempts = 0;
+    while (newCopy === currentCopy && attempts < 5) {
+      newCopy = copyOptions[Math.floor(Math.random() * copyOptions.length)];
+      attempts++;
+    }
+
+    // Update the edited ad copies state
+    setEditedAdCopies((prev) => ({
+      ...prev,
+      [bannerId]: newCopy,
+    }));
+  };
+
   const handleDownload = (banner: Banner) => {
     if (!banner.image) return;
     
@@ -404,6 +441,7 @@ export default function ResultsPage() {
                   caption={generateCaption(banner, index)}
                   onCopy={() => handleCopy(banner.id)}
                   onRegenerate={() => handleRegenerate(banner.id)}
+                  onRegenerateCopy={() => handleRegenerateCopy(banner.id, index)}
                   onDownload={() => handleDownload(banner)}
                   isEditingMode={isEditingCopy}
                   onAdCopyChange={(bannerId, newCopy) => {
