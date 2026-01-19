@@ -67,13 +67,31 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { isOpen, close } = useSidebar();
   const [userEmail, setUserEmail] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchUserEmail = async () => {
+    const fetchUserData = async () => {
       // Try to get user from localStorage (API auth)
       const user = api.getUser();
       if (user?.email) {
         setUserEmail(user.email);
+        // Fetch admin status from Supabase
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.id) {
+            const { data: userData, error } = await supabase
+              .from('users')
+              .select('is_admin')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (!error && userData?.is_admin) {
+              setIsAdmin(true);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching admin status:", error);
+        }
         return;
       }
 
@@ -82,24 +100,58 @@ export default function Sidebar() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.email) {
           setUserEmail(session.user.email);
+          
+          // Fetch admin status
+          if (session.user.id) {
+            const { data: userData, error } = await supabase
+              .from('users')
+              .select('is_admin')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (!error && userData?.is_admin) {
+              setIsAdmin(true);
+            }
+          }
         }
       } catch (error) {
-        console.error("Error fetching user email:", error);
+        console.error("Error fetching user data:", error);
       }
     };
 
-    fetchUserEmail();
+    fetchUserData();
 
     // Listen for auth state changes (Supabase)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user?.email) {
         setUserEmail(session.user.email);
+        
+        // Fetch admin status
+        if (session.user.id) {
+          try {
+            const { data: userData, error } = await supabase
+              .from('users')
+              .select('is_admin')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (!error && userData?.is_admin) {
+              setIsAdmin(true);
+            } else {
+              setIsAdmin(false);
+            }
+          } catch (error) {
+            console.error("Error fetching admin status:", error);
+            setIsAdmin(false);
+          }
+        }
       } else {
         // If Supabase session is cleared, check localStorage
         const user = api.getUser();
         setUserEmail(user?.email || "");
+        setIsAdmin(false);
       }
     });
 
@@ -181,35 +233,43 @@ export default function Sidebar() {
       {/* Navigation Links */}
       <nav className="flex-1 px-4 py-4">
         <div className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => {
-                  // Close sidebar on mobile when link is clicked
-                  if (window.innerWidth < 1024) {
-                    close();
-                  }
-                }}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-[#1a1a22]"
-                    : "text-white hover:bg-[#12121a] hover:text-white"
-                }`}
-                style={isActive ? { color: "#684bf9" } : undefined}
-              >
-                <span 
-                  className="text-white"
+          {navItems
+            .filter((item) => {
+              // Hide admin item if user is not admin
+              if (item.href === "/dashboard/admin") {
+                return isAdmin;
+              }
+              return true;
+            })
+            .map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => {
+                    // Close sidebar on mobile when link is clicked
+                    if (window.innerWidth < 1024) {
+                      close();
+                    }
+                  }}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-[#1a1a22]"
+                      : "text-white hover:bg-[#12121a] hover:text-white"
+                  }`}
                   style={isActive ? { color: "#684bf9" } : undefined}
                 >
-                  {item.icon}
-                </span>
-                {item.label}
-              </Link>
-            );
-          })}
+                  <span 
+                    className="text-white"
+                    style={isActive ? { color: "#684bf9" } : undefined}
+                  >
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </Link>
+              );
+            })}
         </div>
       </nav>
 

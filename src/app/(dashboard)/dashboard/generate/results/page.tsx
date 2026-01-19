@@ -48,12 +48,11 @@ export default function ResultsPage() {
   const [editedAdCopies, setEditedAdCopies] = useState<{ [key: number]: string }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
-
-  const planData = {
-    plan: "Pro",
-    adsThisMonth: 12,
-    limit: 200,
-  };
+  const [planData, setPlanData] = useState({
+    plan: "Starter Pack",
+    adsThisMonth: 0,
+    limit: 5,
+  });
 
   // Generate caption based on extracted data and banner index
   const generateCaption = (banner: Banner, index: number) => {
@@ -157,6 +156,34 @@ export default function ResultsPage() {
 
     return copyOptions[index % copyOptions.length];
   };
+
+  // Fetch plan data
+  useEffect(() => {
+    const fetchPlanData = async () => {
+      try {
+        const response = await api.getUsage();
+        if (response.success && response.data) {
+          const { plan, adsUsedThisMonth, monthlyLimit } = response.data;
+          const planNames: Record<string, string> = {
+            starter: "Starter Pack",
+            creator: "Creator",
+            business: "Business",
+            agency: "Agency",
+          };
+          
+          setPlanData({
+            plan: planNames[plan] || plan,
+            adsThisMonth: adsUsedThisMonth || 0,
+            limit: monthlyLimit === -1 ? Infinity : monthlyLimit,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching plan data:", error);
+      }
+    };
+
+    fetchPlanData();
+  }, []);
 
   // Load banners and extracted data from storage on mount
   useEffect(() => {

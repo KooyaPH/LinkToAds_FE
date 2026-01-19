@@ -12,13 +12,7 @@ import {
   quickFilterSelections,
 } from "@/lib/generateConstants";
 import PlanCard from "@/components/PlanCard";
-
-// Mock data - would come from API/auth state
-const planData = {
-  plan: "Pro",
-  adsThisMonth: 3,
-  limit: 200,
-};
+import { api } from "@/lib/api";
 
 interface ExtractedData {
   url: string;
@@ -75,6 +69,11 @@ export default function StrategyPage() {
   const [selectedArchetypes, setSelectedArchetypes] = useState<string[]>(["lofi", "5star", "lifestyle"]);
   const [selectedProductPhoto, setSelectedProductPhoto] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [planData, setPlanData] = useState({
+    plan: "Starter Pack",
+    adsThisMonth: 0,
+    limit: 5,
+  });
 
   // AI-Extracted Insights state
   const [productInfo, setProductInfo] = useState({
@@ -127,6 +126,34 @@ export default function StrategyPage() {
            lowerUrl.includes('image/svg') || 
            lowerUrl.startsWith('data:image/svg');
   };
+
+  // Fetch plan data
+  useEffect(() => {
+    const fetchPlanData = async () => {
+      try {
+        const response = await api.getUsage();
+        if (response.success && response.data) {
+          const { plan, adsUsedThisMonth, monthlyLimit } = response.data;
+          const planNames: Record<string, string> = {
+            starter: "Starter Pack",
+            creator: "Creator",
+            business: "Business",
+            agency: "Agency",
+          };
+          
+          setPlanData({
+            plan: planNames[plan] || plan,
+            adsThisMonth: adsUsedThisMonth || 0,
+            limit: monthlyLimit === -1 ? Infinity : monthlyLimit,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching plan data:", error);
+      }
+    };
+
+    fetchPlanData();
+  }, []);
 
   // Load extracted data from localStorage on mount
   useEffect(() => {

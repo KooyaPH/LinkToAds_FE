@@ -245,6 +245,70 @@ class ApiClient {
   }>> {
     return this.request('/auth/plans');
   }
+
+  // Admin endpoints
+  async getAdminUsers(): Promise<ApiResponse<{
+    users: Array<{
+      id: string;
+      email: string;
+      name: string;
+      authMethod: "google" | "email";
+      status: string;
+      utmSource: string | null;
+      referrer: string;
+      joined: string | null;
+    }>;
+  }>> {
+    return this.request('/auth/admin/users');
+  }
+
+  async getAdminOnlyUsers(): Promise<ApiResponse<{
+    users: Array<{
+      id: string;
+      email: string;
+      name: string;
+      authMethod: "google" | "email";
+      status: string;
+      utmSource: string | null;
+      referrer: string;
+      joined: string | null;
+    }>;
+  }>> {
+    return this.request('/auth/admin/users?isAdmin=true');
+  }
+
+  async getUserPlan(userId: string): Promise<ApiResponse<{
+    plan: string;
+    monthlyLimit: number;
+  }>> {
+    return this.request(`/auth/admin/users/${userId}/plan`);
+  }
+
+  async updateUserPlan(
+    userId: string,
+    plan: string,
+    monthlyLimit?: number | null
+  ): Promise<ApiResponse<void>> {
+    return this.request(`/auth/admin/users/${userId}/plan`, {
+      method: 'PUT',
+      body: JSON.stringify({ plan, monthlyLimit }),
+    });
+  }
+
+  async deleteUser(userId: string): Promise<ApiResponse<void>> {
+    return this.request(`/auth/admin/users/${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getAdminStats(): Promise<ApiResponse<{
+    totalAds: number;
+    totalProjects: number;
+    adsThisWeek: number;
+    adsThisMonth: number;
+  }>> {
+    return this.request('/auth/admin/stats');
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);
