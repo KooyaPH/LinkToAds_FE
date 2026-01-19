@@ -46,6 +46,10 @@ export default function ResultsPage() {
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [isEditingCopy, setIsEditingCopy] = useState(false);
   const [editedAdCopies, setEditedAdCopies] = useState<{ [key: number]: string }>({});
+  const [aiGeneratedCopies, setAiGeneratedCopies] = useState<{ [key: number]: string }>({});
+  const [isGeneratingCopy, setIsGeneratingCopy] = useState(false);
+  const [isCopiesReady, setIsCopiesReady] = useState(false);
+  const [regeneratingBannerId, setRegeneratingBannerId] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
   const [planData, setPlanData] = useState({
@@ -131,30 +135,69 @@ export default function ResultsPage() {
     return contexts[index % contexts.length];
   };
 
-  // Generate ad copy
+  // Generate ad copy - uses AI-generated copy if available, otherwise shows loading or simple fallback text
   const generateAdCopy = (banner: Banner, index: number) => {
-    // Return edited copy if it exists
-    if (editedAdCopies[banner.id]) {
-      return editedAdCopies[banner.id];
+    // Return edited copy if it exists (highest priority)
+    const editedCopy = editedAdCopies[banner.id];
+    if (
+      typeof editedCopy === "string" &&
+      editedCopy.length > 20 &&
+      !editedCopy.includes("Generating") &&
+      !editedCopy.includes("Preparing")
+    ) {
+      return editedCopy;
     }
 
+    // Return AI-generated copy if available and valid
+    const aiCopy = aiGeneratedCopies[banner.id];
+    if (
+      typeof aiCopy === "string" &&
+      aiCopy.length > 20 &&
+      !aiCopy.includes("Generating") &&
+      !aiCopy.includes("Preparing")
+    ) {
+      return aiCopy;
+    }
+
+    // Fallback message if no data available at all
     if (!extractedData) {
-      return "Discover our amazing products and services designed to help you achieve your goals. Join thousands of satisfied customers today.";
+      return "Preparing your ad copy...";
     }
 
+    // If copies are ready but we don't have one for this banner yet (or something went wrong),
+    // show a simple brand-tailored fallback instead of a loading message
+    if (isCopiesReady && !isGeneratingCopy) {
+      const productName = extractedData.productInfo?.productName || "our product";
+      const usp = extractedData.aiInsights?.uniqueSellingProposition || "";
+      const targetAudience = extractedData.aiInsights?.targetAudience || "";
+
+      const fallbackOptions = [
+        `Discover ${productName} - ${usp || "experience a solution designed around you."}`,
+        `${productName} helps ${targetAudience || "customers"} achieve results with ${usp || "reliable, high-quality performance"}.`,
+        `Transform your experience with ${productName}. ${usp || "Built to deliver real value every day."}`,
+      ];
+
+      return fallbackOptions[index % fallbackOptions.length];
+    }
+
+    // While AI generation is still running (or copies are not yet ready), return a neutral loading message
+    if (isGeneratingCopy || !isCopiesReady) {
+      return "Preparing your ad copy...";
+    }
+
+    // Final defensive fallback
     const productName = extractedData.productInfo?.productName || "our product";
-    const description = extractedData.aiInsights?.businessDescription || "";
-    const usp = extractedData.aiInsights?.uniqueSellingProposition || "";
-    const targetAudience = extractedData.aiInsights?.targetAudience || "";
+    return `Discover ${productName} - experience the difference today.`;
+  };
 
-    const copyOptions = [
-      `Imagine a future where ${targetAudience ? targetAudience.toLowerCase() : "you"} don't have to worry about ${productName.toLowerCase()}. ${productName} helps you ${usp.toLowerCase() || "achieve your goals"} with ease and confidence.`,
-      `Discover ${productName} - ${description.substring(0, 100)}${description.length > 100 ? "..." : ""}`,
-      `Looking for ${productName.toLowerCase()}? ${productName} offers ${usp.toLowerCase() || "premium quality"} designed specifically for ${targetAudience.toLowerCase() || "you"}. Experience the difference today.`,
-      `Transform your life with ${productName}. ${usp || "Our innovative solution"} helps ${targetAudience.toLowerCase() || "you"} achieve ${productName.toLowerCase()} goals faster and easier than ever before.`,
-    ];
-
-    return copyOptions[index % copyOptions.length];
+  // Check if a specific banner's copy is loading
+  const isBannerCopyLoading = (bannerId: number) => {
+    // If this specific banner is being regenerated
+    if (regeneratingBannerId === bannerId) {
+      return true;
+    }
+    // If we're generating copy and this banner doesn't have AI-generated copy yet
+    return isGeneratingCopy && !aiGeneratedCopies[bannerId] && !editedAdCopies[bannerId];
   };
 
   // Fetch plan data
@@ -190,22 +233,38 @@ export default function ResultsPage() {
     const loadData = async () => {
       const loadedBanners = await loadBanners();
       if (loadedBanners && loadedBanners.length > 0) {
-        setBanners(loadedBanners.filter((b: Banner) => b.image));
+        const successfulBanners = loadedBanners.filter((b: Banner) => b.image);
+        setBanners(successfulBanners);
       }
 
-      const storedSelected = localStorage.getItem('selectedBannerIds');
-      if (storedSelected) {
-        setSelectedBanners(JSON.parse(storedSelected));
+      if (typeof window !== 'undefined') {
+        const storedSelected = localStorage.getItem('selectedBannerIds');
+        if (storedSelected) {
+          setSelectedBanners(JSON.parse(storedSelected));
+        }
+
+        // Load extracted data for generating captions
+        const storedExtractedData = localStorage.getItem('extractedData');
+        if (storedExtractedData) {
+          try {
+            const parsed = JSON.parse(storedExtractedData);
+            setExtractedData(parsed);
+          } catch (e) {
+            console.error('Failed to parse extracted data:', e);
+          }
+        }
       }
 
-      // Load extracted data for generating captions
-      const storedExtractedData = localStorage.getItem('extractedData');
-      if (storedExtractedData) {
-        try {
-          const parsed = JSON.parse(storedExtractedData);
-          setExtractedData(parsed);
-        } catch (e) {
-          console.error('Failed to parse extracted data:', e);
+      // Load AI-generated ad copies from localStorage if available
+      if (typeof window !== 'undefined') {
+        const storedAICopies = localStorage.getItem('aiGeneratedAdCopies');
+        if (storedAICopies) {
+          try {
+            const parsed = JSON.parse(storedAICopies);
+            setAiGeneratedCopies(parsed);
+          } catch (e) {
+            console.error('Failed to parse AI-generated ad copies:', e);
+          }
         }
       }
     };
@@ -213,8 +272,113 @@ export default function ResultsPage() {
     loadData();
   }, []);
 
+  // Generate AI ad copy when banners and extracted data are available
+  useEffect(() => {
+    const generateAICopy = async () => {
+      if (!extractedData || banners.length === 0 || isGeneratingCopy) {
+        return;
+      }
+
+      // Check if we already have AI-generated copies for all banners
+      const successfulBanners = banners.filter(b => b.image);
+      if (successfulBanners.length === 0) {
+        setIsCopiesReady(true);
+        return;
+      }
+
+      // Check if we already have valid AI-generated copies for all banners
+      const hasAllCopies = successfulBanners.every(b => {
+        const copy = aiGeneratedCopies[b.id];
+        return copy && copy.length > 20 && !copy.includes('Generating'); // Ensure copy is valid and not a loading message
+      });
+      
+      if (hasAllCopies) {
+        console.log('✅ All banners already have AI-generated copies');
+        setIsCopiesReady(true);
+        return; // Already generated
+      }
+
+      setIsGeneratingCopy(true);
+      setIsCopiesReady(false);
+      
+      try {
+        const count = successfulBanners.length;
+        
+        console.log(`🤖 Generating AI ad copy for ${count} banners...`);
+        const response = await api.generateAdCopy(extractedData, count);
+
+        // Our backend returns { success, adCopies, ... } (not nested under data)
+        const adCopies = (response as any).adCopies || (response as any).data?.adCopies;
+        
+        if (response.success && adCopies) {
+          const newCopies: { [key: number]: string } = {};
+          successfulBanners.forEach((banner, index) => {
+            if (adCopies[index]) {
+              newCopies[banner.id] = adCopies[index];
+            }
+          });
+          
+          // Verify we have copies for all banners
+          const allBannersHaveCopies = successfulBanners.every(b => newCopies[b.id]);
+          
+          if (allBannersHaveCopies) {
+            // Update state and mark as ready
+            setAiGeneratedCopies(newCopies);
+            setIsCopiesReady(true);
+            
+            // Store in localStorage for persistence
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('aiGeneratedAdCopies', JSON.stringify(newCopies));
+            }
+            
+            console.log(`✅ Generated ${Object.keys(newCopies).length} AI ad copies`);
+          } else {
+            console.warn('Not all banners received AI-generated copies, retrying...');
+            // Retry for missing banners
+            const missingBanners = successfulBanners.filter(b => !newCopies[b.id]);
+            if (missingBanners.length > 0) {
+              const retryResponse = await api.generateAdCopy(extractedData, missingBanners.length);
+              if (retryResponse.success && retryResponse.data && retryResponse.data.adCopies) {
+                missingBanners.forEach((banner, index) => {
+                  if (retryResponse.data && retryResponse.data.adCopies[index]) {
+                    newCopies[banner.id] = retryResponse.data.adCopies[index];
+                  }
+                });
+                
+                const finalCheck = successfulBanners.every(b => newCopies[b.id]);
+                if (finalCheck) {
+                  setAiGeneratedCopies(newCopies);
+                  setIsCopiesReady(true);
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('aiGeneratedAdCopies', JSON.stringify(newCopies));
+                  }
+                } else {
+                  // If still missing, mark as ready anyway to show fallback
+                  setAiGeneratedCopies(newCopies); // Set what we have
+                  setIsCopiesReady(true);
+                }
+              }
+            }
+          }
+        } else {
+          console.warn('Failed to generate AI ad copy');
+          // Still mark as ready to show fallback
+          setIsCopiesReady(true);
+        }
+      } catch (error) {
+        console.error('Error generating AI ad copy:', error);
+        // Mark as ready to show fallback
+        setIsCopiesReady(true);
+      } finally {
+        setIsGeneratingCopy(false);
+      }
+    };
+
+    generateAICopy();
+  }, [extractedData, banners.length]); // Only regenerate if extractedData or banner count changes
+
   const successfulBanners = banners.filter(b => b.image);
-  const bannerCount = successfulBanners.length || parseInt(localStorage.getItem('requestedAdsCount') || '3', 10);
+  const bannerCount = successfulBanners.length || (typeof window !== 'undefined' ? parseInt(localStorage.getItem('requestedAdsCount') || '3', 10) : 3);
   
   // Get brand name from extracted data
   const brandName = extractedData?.productInfo?.productName || "Your Brand";
@@ -231,41 +395,60 @@ export default function ResultsPage() {
     router.push('/dashboard/generate/banners');
   };
 
-  const handleRegenerateCopy = (bannerId: number, currentIndex: number) => {
+  const handleRegenerateCopy = async (bannerId: number, currentIndex: number) => {
     if (!extractedData) {
+      console.error('❌ Cannot regenerate: No extracted data available');
       return;
     }
 
-    const productName = extractedData.productInfo?.productName || "our product";
-    const description = extractedData.aiInsights?.businessDescription || "";
-    const usp = extractedData.aiInsights?.uniqueSellingProposition || "";
-    const targetAudience = extractedData.aiInsights?.targetAudience || "";
+    try {
+      setRegeneratingBannerId(bannerId);
+      
+      // Generate new AI copy for this specific banner
+      console.log(`🤖 Regenerating AI ad copy for banner ${bannerId}...`);
+      const response = await api.generateAdCopy(extractedData, 1);
 
-    const copyOptions = [
-      `Imagine a future where ${targetAudience ? targetAudience.toLowerCase() : "you"} don't have to worry about ${productName.toLowerCase()}. ${productName} helps you ${usp.toLowerCase() || "achieve your goals"} with ease and confidence.`,
-      `Discover ${productName} - ${description.substring(0, 100)}${description.length > 100 ? "..." : ""}`,
-      `Looking for ${productName.toLowerCase()}? ${productName} offers ${usp.toLowerCase() || "premium quality"} designed specifically for ${targetAudience.toLowerCase() || "you"}. Experience the difference today.`,
-      `Transform your life with ${productName}. ${usp || "Our innovative solution"} helps ${targetAudience.toLowerCase() || "you"} achieve ${productName.toLowerCase()} goals faster and easier than ever before.`,
-      `${productName} is the solution you've been waiting for. ${usp || "Experience premium quality"} designed for ${targetAudience.toLowerCase() || "you"}. Start your journey today.`,
-      `Join thousands who have transformed their lives with ${productName}. ${usp || "Discover the difference"} and see why ${targetAudience.toLowerCase() || "customers"} choose us.`,
-    ];
+      // Our backend returns { success, adCopies, ... } (not nested under data)
+      const adCopies = (response as any).adCopies || (response as any).data?.adCopies;
+      
+      if (response.success && adCopies && adCopies[0]) {
+        const newCopy = adCopies[0];
+        
+        if (!newCopy || typeof newCopy !== 'string' || newCopy.length < 20) {
+          console.error('❌ Invalid ad copy received:', newCopy);
+          throw new Error('Invalid ad copy received from API');
+        }
+        
+        // Update both states and localStorage in one go
+        setAiGeneratedCopies((prev) => {
+          const updated = { ...prev, [bannerId]: newCopy };
+          
+          // Update localStorage with the updated copies
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('aiGeneratedAdCopies', JSON.stringify(updated));
+          }
+          
+          return updated;
+        });
 
-    // Get a random copy option that's different from the current one
-    const currentCopy = generateAdCopy(successfulBanners.find(b => b.id === bannerId) || successfulBanners[0], currentIndex);
-    let newCopy = copyOptions[Math.floor(Math.random() * copyOptions.length)];
-    
-    // Try to get a different copy (up to 5 attempts)
-    let attempts = 0;
-    while (newCopy === currentCopy && attempts < 5) {
-      newCopy = copyOptions[Math.floor(Math.random() * copyOptions.length)];
-      attempts++;
+        // Update the edited ad copies state with the new AI-generated copy
+        setEditedAdCopies((prev) => ({
+          ...prev,
+          [bannerId]: newCopy,
+        }));
+        
+        console.log(`✅ Regenerated AI ad copy for banner ${bannerId}:`, newCopy.substring(0, 50) + '...');
+      } else {
+        const errorMsg = response.message || 'Unknown error';
+        console.error('❌ Failed to regenerate ad copy:', errorMsg);
+        console.error('Response:', response);
+        throw new Error(errorMsg);
+      }
+    } catch (error) {
+      console.error('❌ Error regenerating ad copy:', error);
+    } finally {
+      setRegeneratingBannerId(null);
     }
-
-    // Update the edited ad copies state
-    setEditedAdCopies((prev) => ({
-      ...prev,
-      [bannerId]: newCopy,
-    }));
   };
 
   const handleDownload = (banner: Banner) => {
@@ -457,30 +640,63 @@ export default function ResultsPage() {
         {/* Ad Cards Grid */}
         {successfulBanners.length > 0 && (
           <div className="max-w-7xl mx-auto mt-12 px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {successfulBanners.map((banner, index) => (
-                <AdCard
-                  key={banner.id}
-                  banner={banner}
-                  brandName={brandName}
-                  adCopy={generateAdCopy(banner, index)}
-                  context={generateContext(banner, index)}
-                  caption={generateCaption(banner, index)}
-                  onCopy={() => handleCopy(banner.id)}
-                  onRegenerate={() => handleRegenerate(banner.id)}
-                  onRegenerateCopy={() => handleRegenerateCopy(banner.id, index)}
-                  onDownload={() => handleDownload(banner)}
-                  isEditingMode={isEditingCopy}
-                  onAdCopyChange={(bannerId, newCopy) => {
-                    // Store the edited ad copy
-                    setEditedAdCopies((prev) => ({
-                      ...prev,
-                      [bannerId]: newCopy,
-                    }));
-                  }}
-                />
-              ))}
-            </div>
+            {/* Loading State - Show while generating AI copies */}
+            {!isCopiesReady && isGeneratingCopy && (
+              <div className="flex flex-col items-center justify-center min-h-[400px] mb-8">
+                <div className="flex flex-col items-center gap-4">
+                  <svg
+                    className="h-12 w-12 animate-spin text-purple-400"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  <p className="text-zinc-400 text-sm">Generating AI-powered ad copy for your banners...</p>
+                  <p className="text-zinc-500 text-xs">This may take a few moments</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Banners Grid - Only show when copies are ready */}
+            {(isCopiesReady || !isGeneratingCopy) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                {successfulBanners.map((banner, index) => (
+                  <AdCard
+                    key={banner.id}
+                    banner={banner}
+                    brandName={brandName}
+                    adCopy={generateAdCopy(banner, index)}
+                    context={generateContext(banner, index)}
+                    caption={generateCaption(banner, index)}
+                    onCopy={() => handleCopy(banner.id)}
+                    onRegenerate={() => handleRegenerate(banner.id)}
+                    onRegenerateCopy={() => handleRegenerateCopy(banner.id, index)}
+                    onDownload={() => handleDownload(banner)}
+                    isEditingMode={isEditingCopy}
+                    isLoadingCopy={isBannerCopyLoading(banner.id)}
+                    onAdCopyChange={(bannerId, newCopy) => {
+                      // Store the edited ad copy
+                      setEditedAdCopies((prev) => ({
+                        ...prev,
+                        [bannerId]: newCopy,
+                      }));
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 

@@ -125,6 +125,21 @@ class ApiClient {
     return this.request<{ status: string; message: string }>('/health');
   }
 
+  // Generate endpoints
+  async generateAdCopy(
+    extractedData: any,
+    count: number = 1
+  ): Promise<ApiResponse<{
+    adCopies: string[];
+    generated: number;
+    requested: number;
+  }>> {
+    return this.request('/generate/ad-copy', {
+      method: 'POST',
+      body: JSON.stringify({ extractedData, count }),
+    });
+  }
+
   // Campaign endpoints
   async saveCampaign(
     ads: Array<{ image: string; caption: string; title?: string }>,
