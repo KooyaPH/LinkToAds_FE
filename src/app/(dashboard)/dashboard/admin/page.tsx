@@ -171,9 +171,9 @@ export default function AdminPage() {
             {/* Shield Icon */}
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#1a1a22] border border-[#1a1a22]">
               <svg
-                className="w-6 h-6 text-purple-500"
+                className="w-6 h-6"
                 fill="none"
-                stroke="currentColor"
+                stroke="#6348f0"
                 viewBox="0 0 24 24"
               >
                 <path

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { api } from "@/lib/api";
 import { type User } from "@/components/AllSignUpsTable";
 import EditSubscriptionModal from "@/components/EditSubscriptionModal";
@@ -20,6 +20,10 @@ export default function PaidSubscribersTable({ users, onRefresh }: PaidSubscribe
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [filterPlanOpen, setFilterPlanOpen] = useState(false);
+  const [filterSourceOpen, setFilterSourceOpen] = useState(false);
+  const filterPlanRef = useRef<HTMLDivElement>(null);
+  const filterSourceRef = useRef<HTMLDivElement>(null);
 
   // Filter paid subscribers - only show users with 'pro', 'business', or 'agency' plans
   // Determine paid status based on plan, not just the status field
@@ -90,6 +94,23 @@ export default function PaidSubscribersTable({ users, onRefresh }: PaidSubscribe
     ...paidUsers.map((u: User) => u.referrer).filter((r): r is string => Boolean(r) && r !== 'direct')
   ])) as string[];
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterPlanRef.current && !filterPlanRef.current.contains(event.target as Node)) {
+        setFilterPlanOpen(false);
+      }
+      if (filterSourceRef.current && !filterSourceRef.current.contains(event.target as Node)) {
+        setFilterSourceOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] overflow-hidden">
       {/* Header Section */}
@@ -148,57 +169,123 @@ export default function PaidSubscribersTable({ users, onRefresh }: PaidSubscribe
           </div>
 
           {/* Plan Filter */}
-          <div className="relative">
-            <select
-              value={filterPlan}
-              onChange={(e) => setFilterPlan(e.target.value)}
-              className="px-4 py-2 pr-8 rounded-lg bg-[#050509] border border-[#1a1a22] text-white text-sm focus:outline-none focus:border-[#6d28d9] appearance-none cursor-pointer"
+          <div ref={filterPlanRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setFilterPlanOpen(!filterPlanOpen)}
+              className="flex items-center justify-between w-40 px-4 py-2 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] text-sm font-medium text-white hover:bg-[#1a1a22] transition-colors"
             >
-              <option value="All Plans">All Plans</option>
-              {uniquePlans.map((plan: string) => (
-                <option key={plan} value={plan}>{plan}</option>
-              ))}
-            </select>
-            <svg
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+              <span>{filterPlan}</span>
+              <svg
+                className={`h-4 w-4 text-white transition-transform ${filterPlanOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            {filterPlanOpen && (
+              <div className="absolute z-[100] w-full mt-1 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] shadow-xl overflow-hidden">
+                {["All Plans", ...uniquePlans].map((plan: string) => (
+                  <button
+                    key={plan}
+                    type="button"
+                    onClick={() => {
+                      setFilterPlan(plan);
+                      setFilterPlanOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 text-sm text-white transition-colors flex items-center gap-2 ${
+                      filterPlan === plan
+                        ? "bg-[#c34cff]"
+                        : "hover:bg-[#1a1a22]"
+                    }`}
+                  >
+                    {filterPlan === plan && (
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    )}
+                    <span>{plan}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Source Filter */}
-          <div className="relative">
-            <select
-              value={filterSource}
-              onChange={(e) => setFilterSource(e.target.value)}
-              className="px-4 py-2 pr-8 rounded-lg bg-[#050509] border border-[#1a1a22] text-white text-sm focus:outline-none focus:border-[#6d28d9] appearance-none cursor-pointer"
+          <div ref={filterSourceRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setFilterSourceOpen(!filterSourceOpen)}
+              className="flex items-center justify-between w-40 px-4 py-2 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] text-sm font-medium text-white hover:bg-[#1a1a22] transition-colors"
             >
-              <option value="All Sources">All Sources</option>
-              {uniqueSources.map((source: string) => (
-                <option key={source} value={source}>{source}</option>
-              ))}
-            </select>
-            <svg
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+              <span>{filterSource}</span>
+              <svg
+                className={`h-4 w-4 text-white transition-transform ${filterSourceOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            {filterSourceOpen && (
+              <div className="absolute z-[100] w-full mt-1 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] shadow-xl overflow-hidden max-h-[200px] overflow-y-auto">
+                {["All Sources", ...uniqueSources].map((source: string) => (
+                  <button
+                    key={source}
+                    type="button"
+                    onClick={() => {
+                      setFilterSource(source);
+                      setFilterSourceOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 text-sm text-white transition-colors flex items-center gap-2 ${
+                      filterSource === source
+                        ? "bg-[#c34cff]"
+                        : "hover:bg-[#1a1a22]"
+                    }`}
+                  >
+                    {filterSource === source && (
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    )}
+                    <span>{source}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

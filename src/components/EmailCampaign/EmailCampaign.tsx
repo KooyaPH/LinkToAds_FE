@@ -24,9 +24,13 @@ export default function EmailCampaign() {
   const [targetAudienceOpen, setTargetAudienceOpen] = useState(false);
   const emailTypeRef = useRef<HTMLDivElement>(null);
   const targetAudienceRef = useRef<HTMLDivElement>(null);
+  const filterTypeRef = useRef<HTMLDivElement>(null);
+  const filterStatusRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("All Types");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [filterTypeOpen, setFilterTypeOpen] = useState(false);
+  const [filterStatusOpen, setFilterStatusOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sendMessage, setSendMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
@@ -96,6 +100,12 @@ export default function EmailCampaign() {
       }
       if (targetAudienceRef.current && !targetAudienceRef.current.contains(event.target as Node)) {
         setTargetAudienceOpen(false);
+      }
+      if (filterTypeRef.current && !filterTypeRef.current.contains(event.target as Node)) {
+        setFilterTypeOpen(false);
+      }
+      if (filterStatusRef.current && !filterStatusRef.current.contains(event.target as Node)) {
+        setFilterStatusOpen(false);
       }
     };
 
@@ -567,29 +577,124 @@ export default function EmailCampaign() {
             {/* Filter Dropdowns */}
             <div className="flex items-center gap-3">
               {/* Type Filter */}
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="px-4 py-2 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] text-sm text-white focus:border-[#684bf9] focus:outline-none cursor-pointer"
-              >
-                <option value="All Types">All Types</option>
-                <option value="special-offer">Special Offer</option>
-                <option value="feature-highlight">Feature Highlight</option>
-                <option value="upgrade-nudge">Upgrade Nudge</option>
-                <option value="referral-invite">Referral Invite</option>
-              </select>
+              <div ref={filterTypeRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setFilterTypeOpen(!filterTypeOpen)}
+                  className="flex items-center justify-between w-40 px-4 py-2 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] text-sm font-medium text-white hover:bg-[#1a1a22] transition-colors"
+                >
+                  <span>{filterType}</span>
+                  <svg
+                    className={`h-4 w-4 text-white transition-transform ${filterTypeOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {filterTypeOpen && (
+                  <div className="absolute z-[100] w-full mt-1 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] shadow-xl overflow-hidden">
+                    {["All Types", "special-offer", "feature-highlight", "upgrade-nudge", "referral-invite"].map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          setFilterType(type);
+                          setFilterTypeOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 text-sm text-white transition-colors flex items-center gap-2 ${
+                          filterType === type
+                            ? "bg-[#c34cff]"
+                            : "hover:bg-[#1a1a22]"
+                        }`}
+                      >
+                        {filterType === type && (
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                        <span>{type === "special-offer" ? "Special Offer" : type === "feature-highlight" ? "Feature Highlight" : type === "upgrade-nudge" ? "Upgrade Nudge" : type === "referral-invite" ? "Referral Invite" : type}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Status Filter */}
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] text-sm text-white focus:border-[#684bf9] focus:outline-none cursor-pointer"
-              >
-                <option value="All">All</option>
-                <option value="Sent">Sent</option>
-                <option value="Failed">Failed</option>
-                <option value="Pending">Pending</option>
-              </select>
+              <div ref={filterStatusRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setFilterStatusOpen(!filterStatusOpen)}
+                  className="flex items-center justify-between w-32 px-4 py-2 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] text-sm font-medium text-white hover:bg-[#1a1a22] transition-colors"
+                >
+                  <span>{filterStatus}</span>
+                  <svg
+                    className={`h-4 w-4 text-white transition-transform ${filterStatusOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {filterStatusOpen && (
+                  <div className="absolute z-[100] w-full mt-1 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] shadow-xl overflow-hidden">
+                    {["All", "Sent", "Failed", "Pending"].map((status) => (
+                      <button
+                        key={status}
+                        type="button"
+                        onClick={() => {
+                          setFilterStatus(status);
+                          setFilterStatusOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 text-sm text-white transition-colors flex items-center gap-2 ${
+                          filterStatus === status
+                            ? "bg-[#c34cff]"
+                            : "hover:bg-[#1a1a22]"
+                        }`}
+                      >
+                        {filterStatus === status && (
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                        <span>{status}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Refresh Button */}
               <button 
