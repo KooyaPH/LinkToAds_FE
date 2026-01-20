@@ -70,52 +70,60 @@ export default function Sidebar() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
+    const fetchAdminStatus = async (userId: string) => {
+      try {
+        // Query Supabase directly using the user ID (works even without Supabase session)
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('is_admin')
+          .eq('id', userId)
+          .single();
+        
+        if (!error && userData?.is_admin) {
+          setIsAdmin(true);
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error fetching admin status:", error);
+        return false;
+      }
+    };
+
     const fetchUserData = async () => {
       // Try to get user from localStorage (API auth)
-      const user = api.getUser();
-      if (user?.email) {
-        setUserEmail(user.email);
-        // Fetch admin status from Supabase
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user?.id) {
-            const { data: userData, error } = await supabase
-              .from('users')
-              .select('is_admin')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (!error && userData?.is_admin) {
-              setIsAdmin(true);
+      const apiUser = api.getUser();
+      if (apiUser?.email) {
+        setUserEmail(apiUser.email);
+        // Check admin status using API user ID
+        if (apiUser.id) {
+          await fetchAdminStatus(apiUser.id);
+        } else {
+          // If ID is missing, fetch current user from API
+          try {
+            const response = await api.getCurrentUser();
+            if (response.success && response.data?.user?.id) {
+              await fetchAdminStatus(response.data.user.id);
             }
+          } catch (error) {
+            console.error("Error fetching current user from API:", error);
           }
-        } catch (error) {
-          console.error("Error fetching admin status:", error);
         }
-        return;
       }
 
-      // Fallback to Supabase session
+      // Also check Supabase session (for users who logged in via Supabase)
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.email) {
           setUserEmail(session.user.email);
           
-          // Fetch admin status
+          // Fetch admin status using Supabase session user ID
           if (session.user.id) {
-            const { data: userData, error } = await supabase
-              .from('users')
-              .select('is_admin')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (!error && userData?.is_admin) {
-              setIsAdmin(true);
-            }
+            await fetchAdminStatus(session.user.id);
           }
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error fetching Supabase session:", error);
       }
     };
 
@@ -130,28 +138,23 @@ export default function Sidebar() {
         
         // Fetch admin status
         if (session.user.id) {
-          try {
-            const { data: userData, error } = await supabase
-              .from('users')
-              .select('is_admin')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (!error && userData?.is_admin) {
-              setIsAdmin(true);
-            } else {
-              setIsAdmin(false);
-            }
-          } catch (error) {
-            console.error("Error fetching admin status:", error);
+          const isAdmin = await fetchAdminStatus(session.user.id);
+          if (!isAdmin) {
             setIsAdmin(false);
           }
         }
       } else {
-        // If Supabase session is cleared, check localStorage
-        const user = api.getUser();
-        setUserEmail(user?.email || "");
-        setIsAdmin(false);
+        // If Supabase session is cleared, check localStorage (API auth)
+        const apiUser = api.getUser();
+        if (apiUser?.email) {
+          setUserEmail(apiUser.email);
+          if (apiUser.id) {
+            await fetchAdminStatus(apiUser.id);
+          }
+        } else {
+          setUserEmail("");
+          setIsAdmin(false);
+        }
       }
     });
 

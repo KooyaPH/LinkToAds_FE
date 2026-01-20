@@ -17,6 +17,11 @@ export default function AdminPage() {
   const [adsThisWeek, setAdsThisWeek] = useState(0);
   const [adsThisMonth, setAdsThisMonth] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [resetEmail, setResetEmail] = useState("");
+  const [showErrorToast, setShowErrorToast] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Fetch users from database
   const fetchUsers = async () => {
@@ -67,6 +72,36 @@ export default function AdminPage() {
     fetchUsers();
   }, []);
 
+  // Handle reset usage button click
+  const handleResetUsage = async () => {
+    if (!resetEmail.trim()) {
+      setErrorMessage("Please enter an email address");
+      setShowErrorToast(true);
+      setTimeout(() => setShowErrorToast(false), 4000);
+      return;
+    }
+
+    try {
+      const response = await api.resetUserUsage(resetEmail.trim());
+      
+      if (response.success) {
+        setSuccessMessage(response.message || `Usage reset successfully for ${resetEmail}`);
+        setShowSuccessToast(true);
+        setResetEmail("");
+        setTimeout(() => setShowSuccessToast(false), 4000);
+      } else {
+        setErrorMessage(response.message || `User not found: ${resetEmail}`);
+        setShowErrorToast(true);
+        setTimeout(() => setShowErrorToast(false), 4000);
+      }
+    } catch (error) {
+      console.error("Error resetting usage:", error);
+      setErrorMessage(`User not found: ${resetEmail}`);
+      setShowErrorToast(true);
+      setTimeout(() => setShowErrorToast(false), 4000);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -97,18 +132,91 @@ export default function AdminPage() {
       {/* Main Content */}
       <main className="px-12 py-8 lg:px-16">
         {/* Page Title */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white">Admin</h2>
-          <p className="mt-1 text-zinc-400">
-          Manage users and view analytics
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {/* Shield Icon */}
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#1a1a22] border border-[#1a1a22]">
+              <svg
+                className="w-6 h-6 text-purple-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white">Admin Dashboard</h2>
+              <p className="mt-1 text-zinc-400">
+                Manage users and view analytics
+              </p>
+            </div>
+          </div>
+          
+          {/* Action Inputs / Buttons */}
+          <div className="flex items-center gap-3">
+            {/* Email to reset usage input */}
+            <div className="flex items-center px-4 py-2 rounded-lg bg-[#050509] border border-[#1a1a22] text-zinc-400 transition-all duration-150 min-w-[260px] focus-within:border-[#6d28d9] focus-within:shadow-[0_0_0_1px_#6d28d9]">
+              <input
+                type="email"
+                placeholder="Email to reset usage..."
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 outline-none caret-white"
+              />
+            </div>
+            
+            {/* Reset Usage button */}
+            <button 
+              onClick={handleResetUsage}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1a1a22] border border-[#1a1a22] text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              <span className="text-sm">Reset Usage</span>
+            </button>
+            
+            {/* Export Paid CSV button */}
+            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1a1a22] border border-[#1a1a22] text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span className="text-sm">Export Paid CSV</span>
+            </button>
+          </div>
         </div>
 
         {/* Analytics */}
         <div className="mb-8">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
             {/* Total Users */}
-            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4">
+            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4 flex flex-col items-center justify-center text-center">
               <div className="flex items-center gap-2 mb-2">
                 <svg
                   className="h-5 w-5 text-zinc-400"
@@ -129,7 +237,7 @@ export default function AdminPage() {
             </div>
 
             {/* Free */}
-            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4">
+            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4 flex flex-col items-center justify-center text-center">
               <div className="mb-2">
                 <span className="text-sm text-zinc-400">Free</span>
               </div>
@@ -137,7 +245,7 @@ export default function AdminPage() {
             </div>
 
             {/* Paid */}
-            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4">
+            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4 flex flex-col items-center justify-center text-center">
               <div className="flex items-center gap-2 mb-2">
                 <svg
                   className="h-5 w-5 text-green-500"
@@ -158,7 +266,7 @@ export default function AdminPage() {
             </div>
 
             {/* Conversion */}
-            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4">
+            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4 flex flex-col items-center justify-center text-center">
               <div className="mb-2">
                 <span className="text-sm text-zinc-400">Conversion</span>
               </div>
@@ -170,7 +278,7 @@ export default function AdminPage() {
             </div>
 
             {/* Total Ads */}
-            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4">
+            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4 flex flex-col items-center justify-center text-center">
               <div className="flex items-center gap-2 mb-2">
                 <svg
                   className="h-5 w-5 text-zinc-400"
@@ -191,7 +299,7 @@ export default function AdminPage() {
             </div>
 
             {/* Campaigns */}
-            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4">
+            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4 flex flex-col items-center justify-center text-center">
               <div className="flex items-center gap-2 mb-2">
                 <svg
                   className="h-5 w-5 text-zinc-400"
@@ -212,7 +320,7 @@ export default function AdminPage() {
             </div>
 
             {/* This Week */}
-            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4">
+            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4 flex flex-col items-center justify-center text-center">
               <div className="flex items-center gap-2 mb-2">
                 <svg
                   className="h-5 w-5 text-blue-500"
@@ -233,7 +341,7 @@ export default function AdminPage() {
             </div>
 
             {/* This Month */}
-            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4">
+            <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] p-4 flex flex-col items-center justify-center text-center">
               <div className="mb-2">
                 <span className="text-sm text-zinc-400">This Month</span>
               </div>
@@ -400,6 +508,50 @@ export default function AdminPage() {
           <AdminUsersTable onUserDelete={fetchUsers} />
         )}
       </main>
+
+      {/* Error Toast */}
+      {showErrorToast && (
+        <div className="fixed top-4 right-4 z-50 animate-slide-down-up">
+          <div className="bg-[#1a1a22] border border-[#2d2d3a] rounded-lg px-4 py-3 flex items-center gap-3 shadow-lg min-w-[320px]">
+            {/* Exclamation Icon */}
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white flex items-center justify-center">
+              <span className="text-black text-sm font-bold">!</span>
+            </div>
+            {/* Error Text */}
+            <span className="text-white text-sm font-medium">
+              {errorMessage || `User not found: ${resetEmail || "email@gmail.com"}`}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Success Toast */}
+      {showSuccessToast && (
+        <div className="fixed top-4 right-4 z-50 animate-slide-down-up">
+          <div className="bg-[#1a1a22] border border-[#2d2d3a] rounded-lg px-4 py-3 flex items-center gap-3 shadow-lg min-w-[320px]">
+            {/* Checkmark Icon */}
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white flex items-center justify-center">
+              <svg
+                className="w-4 h-4 text-[#1a1a22]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            {/* Success Text */}
+            <span className="text-white text-sm font-medium">
+              {successMessage}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

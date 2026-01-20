@@ -325,6 +325,17 @@ class ApiClient {
   }>> {
     return this.request('/auth/admin/stats');
   }
+
+  async resetUserUsage(email: string): Promise<ApiResponse<{
+    email: string;
+    adsRemaining: number;
+    adsUsedThisMonth: number;
+  }>> {
+    return this.request('/auth/admin/reset-usage', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

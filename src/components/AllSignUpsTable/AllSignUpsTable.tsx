@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { api } from "@/lib/api";
 import EditSubscriptionModal from "@/components/EditSubscriptionModal";
 import DeleteUserModal from "@/components/DeleteUserModal";
@@ -31,6 +31,66 @@ export default function AllSignUpsTable({ users, onUserUpdate }: AllSignUpsTable
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Dropdown open states
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownRefs = {
+    all: useRef<HTMLDivElement>(null),
+    method: useRef<HTMLDivElement>(null),
+    source: useRef<HTMLDivElement>(null),
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        openDropdown &&
+        dropdownRefs[openDropdown as keyof typeof dropdownRefs]?.current &&
+        !dropdownRefs[openDropdown as keyof typeof dropdownRefs].current?.contains(event.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openDropdown]);
+
+  // Filter users based on search query and filters
+  const filteredUsers = users.filter((user) => {
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        user.email.toLowerCase().includes(query) ||
+        (user.name && user.name.toLowerCase().includes(query));
+      if (!matchesSearch) return false;
+    }
+
+    // Status filter (All/Paid/Free)
+    if (filterAll !== "All") {
+      if (filterAll === "Paid" && user.status !== "Paid") return false;
+      if (filterAll === "Free" && user.status !== "Free") return false;
+    }
+
+    // Auth method filter
+    if (filterMethod !== "All Methods") {
+      if (filterMethod === "Google" && user.authMethod !== "google") return false;
+      if (filterMethod === "Email" && user.authMethod !== "email") return false;
+    }
+
+    // Source filter (UTM Source or Referrer)
+    if (filterSource !== "All Sources") {
+      const filterLower = filterSource.toLowerCase();
+      const utmMatch = user.utmSource?.toLowerCase() === filterLower;
+      const referrerMatch = user.referrer?.toLowerCase().includes(filterLower);
+      if (!utmMatch && !referrerMatch) return false;
+    }
+
+    return true;
+  });
 
   return (
     <div className="rounded-xl border border-[#1a1a22] bg-[#0d1117] overflow-hidden">
@@ -53,7 +113,7 @@ export default function AllSignUpsTable({ users, onUserUpdate }: AllSignUpsTable
           </svg>
           <h3 className="text-lg font-semibold text-white">All Sign-ups</h3>
           <span className="rounded-full bg-[#1a1a22] px-2.5 py-0.5 text-xs font-medium text-white">
-            {users.length}
+            {filteredUsers.length}
           </span>
         </div>
 
@@ -84,31 +144,181 @@ export default function AllSignUpsTable({ users, onUserUpdate }: AllSignUpsTable
           </div>
 
           {/* Filter Dropdowns */}
-          <select
-            value={filterAll}
-            onChange={(e) => setFilterAll(e.target.value)}
-            className="rounded-lg border border-[#1a1a22] bg-[#0a0a0f] px-4 py-2 text-sm text-white focus:border-[#684bf9] focus:outline-none"
-          >
-            <option value="All">All</option>
-          </select>
+          <div className="flex items-center gap-3">
+            {/* All/Paid/Free Dropdown */}
+            <div className="relative" ref={dropdownRefs.all}>
+              <button
+                onClick={() => setOpenDropdown(openDropdown === "all" ? null : "all")}
+                className="flex items-center gap-2 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] px-4 py-2 text-sm text-white hover:border-[#2a2a32] transition-colors"
+              >
+                <span>{filterAll}</span>
+                <svg
+                  className={`h-4 w-4 transition-transform ${openDropdown === "all" ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {openDropdown === "all" && (
+                <div className="absolute top-full left-0 mt-1 z-50 min-w-[120px] rounded-lg border border-[#1a1a22] bg-[#0a0a0f] shadow-lg overflow-hidden">
+                  {["All", "Paid", "Free"].map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        setFilterAll(option);
+                        setOpenDropdown(null);
+                      }}
+                      className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left transition-colors ${
+                        filterAll === option
+                          ? "bg-[#c34cff] text-white"
+                          : "text-white hover:bg-[#1a1a22]"
+                      }`}
+                    >
+                      {filterAll === option && (
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
+                      <span>{option}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          <select
-            value={filterMethod}
-            onChange={(e) => setFilterMethod(e.target.value)}
-            className="rounded-lg border border-[#1a1a22] bg-[#0a0a0f] px-4 py-2 text-sm text-white focus:border-[#684bf9] focus:outline-none"
-          >
-            <option value="All Methods">All Methods</option>
-            <option value="Google">Google</option>
-            <option value="Email">Email</option>
-          </select>
+            {/* Methods Dropdown */}
+            <div className="relative" ref={dropdownRefs.method}>
+              <button
+                onClick={() => setOpenDropdown(openDropdown === "method" ? null : "method")}
+                className="flex items-center gap-2 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] px-4 py-2 text-sm text-white hover:border-[#2a2a32] transition-colors"
+              >
+                <span>{filterMethod}</span>
+                <svg
+                  className={`h-4 w-4 transition-transform ${openDropdown === "method" ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {openDropdown === "method" && (
+                <div className="absolute top-full left-0 mt-1 z-50 min-w-[140px] rounded-lg border border-[#1a1a22] bg-[#0a0a0f] shadow-lg overflow-hidden">
+                  {["All Methods", "Google", "Email"].map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        setFilterMethod(option);
+                        setOpenDropdown(null);
+                      }}
+                      className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left transition-colors ${
+                        filterMethod === option
+                          ? "bg-[#c34cff] text-white"
+                          : "text-white hover:bg-[#1a1a22]"
+                      }`}
+                    >
+                      {filterMethod === option && (
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
+                      <span>{option}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          <select
-            value={filterSource}
-            onChange={(e) => setFilterSource(e.target.value)}
-            className="rounded-lg border border-[#1a1a22] bg-[#0a0a0f] px-4 py-2 text-sm text-white focus:border-[#684bf9] focus:outline-none"
-          >
-            <option value="All Sources">All Sources</option>
-          </select>
+            {/* Sources Dropdown */}
+            <div className="relative" ref={dropdownRefs.source}>
+              <button
+                onClick={() => setOpenDropdown(openDropdown === "source" ? null : "source")}
+                className="flex items-center gap-2 rounded-lg border border-[#1a1a22] bg-[#0a0a0f] px-4 py-2 text-sm text-white hover:border-[#2a2a32] transition-colors"
+              >
+                <span>{filterSource}</span>
+                <svg
+                  className={`h-4 w-4 transition-transform ${openDropdown === "source" ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {openDropdown === "source" && (
+                <div className="absolute top-full left-0 mt-1 z-50 min-w-[140px] rounded-lg border border-[#1a1a22] bg-[#0a0a0f] shadow-lg overflow-hidden">
+                  {["All Sources", "META", "me"].map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        setFilterSource(option);
+                        setOpenDropdown(null);
+                      }}
+                      className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left transition-colors ${
+                        filterSource === option
+                          ? "bg-[#c34cff] text-white"
+                          : "text-white hover:bg-[#1a1a22]"
+                      }`}
+                    >
+                      {filterSource === option && (
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
+                      <span>{option}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Refresh Button */}
           <button
@@ -180,7 +390,14 @@ export default function AllSignUpsTable({ users, onUserUpdate }: AllSignUpsTable
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1a1a22]">
-              {users.map((user) => (
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-12 text-center text-sm text-zinc-400">
+                    No users found matching your filters.
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user) => (
                 <tr
                   key={user.id}
                   className="hover:bg-[#12121a] transition-colors"
@@ -288,7 +505,7 @@ export default function AllSignUpsTable({ users, onUserUpdate }: AllSignUpsTable
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
