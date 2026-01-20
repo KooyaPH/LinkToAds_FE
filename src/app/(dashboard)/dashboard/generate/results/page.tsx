@@ -264,10 +264,24 @@ export default function ResultsPage() {
           try {
             const parsed = JSON.parse(storedExtractedData);
             setExtractedData(parsed);
+            
+            // Log complete stage success when results page loads
+            const url = parsed.url || '';
+            if (url && successfulBanners.length > 0) {
+              try {
+                await api.logUrlAttempt({
+                  url,
+                  stage: 'complete',
+                  status: 'success',
+                });
+              } catch (logError) {
+                console.error('Failed to log URL attempt:', logError);
+              }
+            }
           } catch (e) {
             console.error('Failed to parse extracted data:', e);
           }
-        }
+      }
 
         // Clear any old ad copies from localStorage - we always generate fresh
         localStorage.removeItem('aiGeneratedAdCopies');
@@ -308,9 +322,9 @@ export default function ResultsPage() {
       // Only skip generation if we have copies for ALL current banner IDs
       const hasAllCopies = currentBannerIds === existingCopyIds && 
         successfulBanners.every(b => {
-          const copy = aiGeneratedCopies[b.id];
+        const copy = aiGeneratedCopies[b.id];
           return copy && copy.length > 20 && !copy.includes('Generating');
-        });
+      });
       
       if (hasAllCopies) {
         console.log('✅ All banners already have AI-generated copies');

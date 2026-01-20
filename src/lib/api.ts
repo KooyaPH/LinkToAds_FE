@@ -336,6 +336,124 @@ class ApiClient {
       body: JSON.stringify({ email }),
     });
   }
+
+  // Email Campaign API
+  async sendEmailCampaign(data: {
+    emailType: string;
+    targetAudience: string;
+    subject?: string;
+    customMessage?: string;
+  }): Promise<ApiResponse<{
+    sent: number;
+    failed: number;
+    total: number;
+    results?: Array<{ recipient: string; id: string }>;
+    errors?: Array<{ recipient: string; error: string }>;
+  }>> {
+    return this.request('/email/send-campaign', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getEmailLogs(params?: {
+    search?: string;
+    emailType?: string;
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ApiResponse<{
+    logs: Array<{
+      id: string;
+      recipient_email: string;
+      recipient_name: string | null;
+      email_type: string;
+      subject: string;
+      status: string;
+      sent_at: string | null;
+      error_message: string | null;
+      user_id: string | null;
+      created_at: string;
+    }>;
+    total: number;
+    stats: {
+      sentToday: number;
+      sentThisWeek: number;
+      failedThisWeek: number;
+      successRate: string;
+    };
+  }>> {
+    const queryParams = new URLSearchParams();
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.emailType) queryParams.append('emailType', params.emailType);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+
+    const query = queryParams.toString();
+    return this.request(`/email/logs${query ? `?${query}` : ''}`, {
+      method: 'GET',
+    });
+  }
+
+  async getRecipientCount(targetAudience: string): Promise<ApiResponse<{
+    count: number;
+  }>> {
+    return this.request(`/email/recipient-count?targetAudience=${targetAudience}`, {
+      method: 'GET',
+    });
+  }
+
+  async getUrlAttempts(params?: {
+    search?: string;
+    stage?: string;
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ApiResponse<{
+    attempts: Array<{
+      id: string;
+      email: string | null;
+      url: string;
+      stage: string;
+      status: string;
+      error_message: string | null;
+      user_id: string | null;
+      created_at: string;
+    }>;
+    total: number;
+  }>> {
+    const queryParams = new URLSearchParams();
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.stage) queryParams.append('stage', params.stage);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+
+    const query = queryParams.toString();
+    return this.request(`/url-attempts${query ? `?${query}` : ''}`, {
+      method: 'GET',
+    });
+  }
+
+  async logUrlAttempt(data: {
+    url: string;
+    stage: 'scrape' | 'generate' | 'complete';
+    status: 'success' | 'error' | 'pending';
+    error_message?: string;
+  }): Promise<ApiResponse<{
+    id: string;
+    url: string;
+    stage: string;
+    status: string;
+    error_message: string | null;
+    created_at: string;
+  }>> {
+    return this.request('/url-attempts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

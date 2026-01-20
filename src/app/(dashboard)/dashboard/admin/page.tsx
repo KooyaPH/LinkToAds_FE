@@ -5,6 +5,8 @@ import { useSidebar } from "@/components/Sidebar/SidebarContext";
 import AllSignUpsTable, { type User } from "@/components/AllSignUpsTable";
 import AdminUsersTable from "@/components/AdminUsersTable";
 import PaidSubscribersTable from "@/components/PaidSubscribersTable";
+import EmailCampaign from "@/components/EmailCampaign";
+import UrlAttemptsTable from "@/components/UrlAttemptsTable";
 import { api } from "@/lib/api";
 
 export default function AdminPage() {
@@ -17,6 +19,8 @@ export default function AdminPage() {
   const [totalProjects, setTotalProjects] = useState(0);
   const [adsThisWeek, setAdsThisWeek] = useState(0);
   const [adsThisMonth, setAdsThisMonth] = useState(0);
+  const [urlAttemptsCount, setUrlAttemptsCount] = useState(0);
+  const [emailLogsCount, setEmailLogsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [resetEmail, setResetEmail] = useState("");
   const [showErrorToast, setShowErrorToast] = useState(false);
@@ -70,6 +74,26 @@ export default function AdminPage() {
         }
       } else {
         console.error("Failed to fetch admin stats:", statsResponse.message);
+      }
+
+      // Fetch URL attempts count
+      try {
+        const urlAttemptsResponse = await api.getUrlAttempts({ limit: 1, offset: 0 });
+        if (urlAttemptsResponse.success && urlAttemptsResponse.data) {
+          setUrlAttemptsCount(urlAttemptsResponse.data.total || 0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch URL attempts count:", error);
+      }
+
+      // Fetch email logs count
+      try {
+        const emailLogsResponse = await api.getEmailLogs({ limit: 1, offset: 0 });
+        if (emailLogsResponse.success && emailLogsResponse.data) {
+          setEmailLogsCount(emailLogsResponse.data.total || 0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch email logs count:", error);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -438,7 +462,7 @@ export default function AdminPage() {
                 />
               </svg>
               <span className="text-sm font-medium">Emails</span>
-              <span className="text-sm font-bold ml-1">0</span>
+              <span className="text-sm font-bold ml-1">{emailLogsCount}</span>
             </button>
 
             {/* Admins */}
@@ -490,7 +514,7 @@ export default function AdminPage() {
                 />
               </svg>
               <span className="text-sm font-medium">URL Attempts</span>
-              <span className="text-sm font-bold ml-1">0</span>
+              <span className="text-sm font-bold ml-1">{urlAttemptsCount}</span>
             </button>
           </div>
         </div>
@@ -521,6 +545,14 @@ export default function AdminPage() {
         {/* Paid Subscribers */}
         {!isLoading && selectedTab === "subscribers" && (
           <PaidSubscribersTable users={users} onRefresh={fetchUsers} />
+        )}
+
+        {/* Emails */}
+        {!isLoading && selectedTab === "emails" && <EmailCampaign />}
+
+        {/* URL Attempts */}
+        {!isLoading && selectedTab === "url-attempts" && (
+          <UrlAttemptsTable />
         )}
       </main>
 

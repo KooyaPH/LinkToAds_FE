@@ -10,6 +10,7 @@ import UpgradePlanModal from "@/components/UpgradePlanModal";
 const PLAN_INFO: Record<string, { name: string; tokens: number }> = {
   starter: { name: "Starter Pack", tokens: 5 },
   creator: { name: "Creator", tokens: 20 },
+  pro: { name: "Pro", tokens: 50 }, // Pro plan (same as business)
   business: { name: "Business", tokens: 50 },
   agency: { name: "Agency", tokens: -1 }, // -1 means unlimited
 };
@@ -31,11 +32,11 @@ export default function UsagePage() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [usageData, setUsageData] = useState<UsageData>({
-    currentPlan: "starter",
-    planDisplayName: "Starter Pack",
+    currentPlan: "",
+    planDisplayName: "",
     adsGeneratedThisMonth: 0,
-    monthlyLimit: 5,
-    remainingThisMonth: 5,
+    monthlyLimit: 0,
+    remainingThisMonth: 0,
     periodStart: null,
     periodEnd: null,
     isUnlimited: false,

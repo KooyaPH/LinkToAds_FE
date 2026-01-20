@@ -95,6 +95,22 @@ export default function BannersPage() {
         // Initialize placeholders based on count
         setBanners(Array.from({ length: count }, (_, i) => ({ id: i, label: `Banner Image ${i + 1}` })));
 
+        // Get URL from extracted data
+        const url = extractedData?.url || '';
+
+        // Log generate attempt as pending
+        if (url) {
+          try {
+            await api.logUrlAttempt({
+              url,
+              stage: 'generate',
+              status: 'pending',
+            });
+          } catch (logError) {
+            console.error('Failed to log URL attempt:', logError);
+          }
+        }
+
         // Call backend API to generate banners
         const response = await fetch('http://localhost:5000/api/generate/banners', {
           method: 'POST',
@@ -117,11 +133,55 @@ export default function BannersPage() {
           // Save banners to storage (IndexedDB for images, localStorage for metadata)
           await saveBanners(data.banners);
           console.log(`Generated ${data.generated} banners successfully`);
+          
+          // Log generate success
+          if (url) {
+            try {
+              await api.logUrlAttempt({
+                url,
+                stage: 'generate',
+                status: 'success',
+              });
+            } catch (logError) {
+              console.error('Failed to log URL attempt:', logError);
+            }
+          }
         } else {
+          // Log generate error
+          if (url) {
+            try {
+              await api.logUrlAttempt({
+                url,
+                stage: 'generate',
+                status: 'error',
+                error_message: data.error || 'Failed to generate banners',
+              });
+            } catch (logError) {
+              console.error('Failed to log URL attempt:', logError);
+            }
+          }
+          
           setGenerationError(data.error || 'Failed to generate banners');
         }
       } catch (error) {
         console.error('Banner generation error:', error);
+        
+        // Log generate error
+        const extractedData = JSON.parse(localStorage.getItem('extractedData') || '{}');
+        const url = extractedData?.url || '';
+        if (url) {
+          try {
+            await api.logUrlAttempt({
+              url,
+              stage: 'generate',
+              status: 'error',
+              error_message: 'Failed to connect to server. Make sure the backend is running.',
+            });
+          } catch (logError) {
+            console.error('Failed to log URL attempt:', logError);
+          }
+        }
+        
         setGenerationError('Failed to connect to server. Make sure the backend is running.');
       } finally {
         setIsGenerating(false);

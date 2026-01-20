@@ -192,6 +192,17 @@ export default function GeneratePage() {
     try {
       console.log("🔍 Starting extraction for:", url);
       
+      // Log scrape attempt as pending
+      try {
+        await api.logUrlAttempt({
+          url,
+          stage: 'scrape',
+          status: 'pending',
+        });
+      } catch (logError) {
+        console.error('Failed to log URL attempt:', logError);
+      }
+      
       // Start progress simulation and API call in parallel
       const progressPromise = simulateProgress();
       
@@ -225,6 +236,17 @@ export default function GeneratePage() {
         console.log("🤖 AI Insights:", data.aiInsights);
         console.log("📊 Full extracted data:", data);
         
+        // Log scrape success
+        try {
+          await api.logUrlAttempt({
+            url,
+            stage: 'scrape',
+            status: 'success',
+          });
+        } catch (logError) {
+          console.error('Failed to log URL attempt:', logError);
+        }
+        
         // Store extracted data in localStorage for the strategy page
         localStorage.setItem('extractedData', JSON.stringify(data));
         
@@ -237,6 +259,18 @@ export default function GeneratePage() {
           router.push("/dashboard/generate/strategy");
         }, 500);
       } else {
+        // Log scrape error
+        try {
+          await api.logUrlAttempt({
+            url,
+            stage: 'scrape',
+            status: 'error',
+            error_message: result.message || "Failed to extract content",
+          });
+        } catch (logError) {
+          console.error('Failed to log URL attempt:', logError);
+        }
+        
         setError(result.message || "Failed to extract content");
         console.error("❌ Extraction failed:", result.message);
         setIsLoading(false);
@@ -245,6 +279,19 @@ export default function GeneratePage() {
       }
     } catch (err) {
       const errorMessage = "Failed to connect to the server. Please make sure the backend is running.";
+      
+      // Log scrape error
+      try {
+        await api.logUrlAttempt({
+          url,
+          stage: 'scrape',
+          status: 'error',
+          error_message: errorMessage,
+        });
+      } catch (logError) {
+        console.error('Failed to log URL attempt:', logError);
+      }
+      
       setError(errorMessage);
       console.error("❌ Error:", err);
       setIsLoading(false);
