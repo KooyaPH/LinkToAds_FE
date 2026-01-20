@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { steps, archetypeCategories } from "@/lib/generateConstants";
@@ -233,15 +233,29 @@ export default function ResultsPage() {
   useEffect(() => {
     const loadData = async () => {
       const loadedBanners = await loadBanners();
+      let successfulBanners: Banner[] = [];
       if (loadedBanners && loadedBanners.length > 0) {
-        const successfulBanners = loadedBanners.filter((b: Banner) => b.image);
-        setBanners(successfulBanners);
+        successfulBanners = loadedBanners.filter((b: Banner) => b.image);
       }
 
       if (typeof window !== 'undefined') {
         const storedSelected = localStorage.getItem('selectedBannerIds');
+        let selectedIds: number[] = [];
         if (storedSelected) {
-          setSelectedBanners(JSON.parse(storedSelected));
+          selectedIds = JSON.parse(storedSelected);
+          setSelectedBanners(selectedIds);
+        }
+
+        // Filter banners to only include selected ones
+        // If no selections made, show all banners (fallback behavior)
+        if (selectedIds.length > 0) {
+          const filteredBanners = successfulBanners.filter((b: Banner) => selectedIds.includes(b.id));
+          setBanners(filteredBanners);
+          console.log(`✅ Filtered to ${filteredBanners.length} selected banners (IDs: ${selectedIds.join(', ')})`);
+        } else {
+          // No selections - show all banners (for backwards compatibility or first-time flow)
+          setBanners(successfulBanners);
+          console.log(`⚠️ No banner selections found - showing all ${successfulBanners.length} banners`);
         }
 
         // Load extracted data for generating captions
@@ -254,26 +268,26 @@ export default function ResultsPage() {
             console.error('Failed to parse extracted data:', e);
           }
         }
-      }
 
-      // Load AI-generated ad copies from localStorage if available
-      if (typeof window !== 'undefined') {
-        const storedAICopies = localStorage.getItem('aiGeneratedAdCopies');
-        if (storedAICopies) {
-          try {
-            const parsed = JSON.parse(storedAICopies);
-            setAiGeneratedCopies(parsed);
-          } catch (e) {
-            console.error('Failed to parse AI-generated ad copies:', e);
-          }
-        }
+        // Clear any old ad copies from localStorage - we always generate fresh
+        localStorage.removeItem('aiGeneratedAdCopies');
+        // Also clear any existing copies in state - force fresh generation
+        setAiGeneratedCopies({});
+        setEditedAdCopies({});
       }
     };
     
     loadData();
   }, []);
 
+  // Create a stable signature of banner IDs for dependency tracking
+  const bannerIdsSignature = useMemo(() => {
+    const successfulBanners = banners.filter(b => b.image);
+    return successfulBanners.map(b => b.id).sort().join(',');
+  }, [banners]);
+
   // Generate AI ad copy when banners and extracted data are available
+  // Always generate fresh - never rely on cached copies
   useEffect(() => {
     const generateAICopy = async () => {
       if (!extractedData || banners.length === 0 || isGeneratingCopy) {
@@ -287,16 +301,27 @@ export default function ResultsPage() {
         return;
       }
 
-      // Check if we already have valid AI-generated copies for all banners
-      const hasAllCopies = successfulBanners.every(b => {
-        const copy = aiGeneratedCopies[b.id];
-        return copy && copy.length > 20 && !copy.includes('Generating'); // Ensure copy is valid and not a loading message
-      });
+      // Create a signature of current banner IDs to validate copies
+      const currentBannerIds = successfulBanners.map(b => b.id).sort().join(',');
+      const existingCopyIds = Object.keys(aiGeneratedCopies).map(Number).sort().join(',');
+      
+      // Only skip generation if we have copies for ALL current banner IDs
+      const hasAllCopies = currentBannerIds === existingCopyIds && 
+        successfulBanners.every(b => {
+          const copy = aiGeneratedCopies[b.id];
+          return copy && copy.length > 20 && !copy.includes('Generating');
+        });
       
       if (hasAllCopies) {
         console.log('✅ All banners already have AI-generated copies');
         setIsCopiesReady(true);
-        return; // Already generated
+        return; // Already generated for these exact banners
+      }
+      
+      // Clear any mismatched copies
+      if (currentBannerIds !== existingCopyIds) {
+        console.log('⚠️ Banner IDs changed - clearing old copies');
+        setAiGeneratedCopies({});
       }
 
       setIsGeneratingCopy(true);
@@ -327,11 +352,7 @@ export default function ResultsPage() {
             setAiGeneratedCopies(newCopies);
             setIsCopiesReady(true);
             
-            // Store in localStorage for persistence
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('aiGeneratedAdCopies', JSON.stringify(newCopies));
-            }
-            
+            // Don't persist in localStorage - always generate fresh
             console.log(`✅ Generated ${Object.keys(newCopies).length} AI ad copies`);
           } else {
             console.warn('Not all banners received AI-generated copies, retrying...');
@@ -350,9 +371,6 @@ export default function ResultsPage() {
                 if (finalCheck) {
                   setAiGeneratedCopies(newCopies);
                   setIsCopiesReady(true);
-                  if (typeof window !== 'undefined') {
-                    localStorage.setItem('aiGeneratedAdCopies', JSON.stringify(newCopies));
-                  }
                 } else {
                   // If still missing, mark as ready anyway to show fallback
                   setAiGeneratedCopies(newCopies); // Set what we have
@@ -376,7 +394,8 @@ export default function ResultsPage() {
     };
 
     generateAICopy();
-  }, [extractedData, banners.length]); // Only regenerate if extractedData or banner count changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extractedData, bannerIdsSignature]); // Regenerate if extractedData or banner IDs change
 
   const successfulBanners = banners.filter(b => b.image);
 
@@ -437,15 +456,9 @@ export default function ResultsPage() {
           throw new Error('Invalid ad copy received from API');
         }
         
-        // Update both states and localStorage in one go
+        // Update both states - don't persist in localStorage
         setAiGeneratedCopies((prev) => {
           const updated = { ...prev, [bannerId]: newCopy };
-          
-          // Update localStorage with the updated copies
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('aiGeneratedAdCopies', JSON.stringify(updated));
-          }
-          
           return updated;
         });
 

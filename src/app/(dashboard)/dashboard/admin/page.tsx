@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSidebar } from "@/components/Sidebar/SidebarContext";
 import AllSignUpsTable, { type User } from "@/components/AllSignUpsTable";
 import AdminUsersTable from "@/components/AdminUsersTable";
+import PaidSubscribersTable from "@/components/PaidSubscribersTable";
 import { api } from "@/lib/api";
 
 export default function AdminPage() {
@@ -22,6 +23,15 @@ export default function AdminPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
+  // Helper function to determine if a user is a paid subscriber based on plan
+  const isPaidSubscriber = (user: User) => {
+    const paidPlans = ['creator', 'business', 'agency', 'pro'];
+    return user.plan && paidPlans.includes(user.plan.toLowerCase());
+  };
+
+  // Calculate paid subscribers count
+  const paidSubscribersCount = users.filter(isPaidSubscriber).length;
 
   // Fetch users from database
   const fetchUsers = async () => {
@@ -262,7 +272,7 @@ export default function AdminPage() {
                 </svg>
                 <span className="text-sm text-zinc-400">Paid</span>
               </div>
-              <p className="text-2xl font-bold text-green-500">{users.filter(u => u.status === 'Paid').length}</p>
+              <p className="text-2xl font-bold text-green-500">{paidSubscribersCount}</p>
             </div>
 
             {/* Conversion */}
@@ -272,7 +282,7 @@ export default function AdminPage() {
               </div>
               <p className="text-2xl font-bold text-white">
                 {users.length > 0 
-                  ? `${Math.round((users.filter(u => u.status === 'Paid').length / users.length) * 100)}%`
+                  ? `${Math.round((paidSubscribersCount / users.length) * 100)}%`
                   : '0%'}
               </p>
             </div>
@@ -402,7 +412,7 @@ export default function AdminPage() {
                 />
               </svg>
               <span className="text-sm font-medium">Subscribers (Paid)</span>
-              <span className="text-sm font-bold ml-1">0</span>
+              <span className="text-sm font-bold ml-1">{paidSubscribersCount}</span>
             </button>
 
             {/* Emails */}
@@ -506,6 +516,11 @@ export default function AdminPage() {
         {/* Admin Users */}
         {!isLoading && selectedTab === "admins" && (
           <AdminUsersTable onUserDelete={fetchUsers} />
+        )}
+
+        {/* Paid Subscribers */}
+        {!isLoading && selectedTab === "subscribers" && (
+          <PaidSubscribersTable users={users} onRefresh={fetchUsers} />
         )}
       </main>
 

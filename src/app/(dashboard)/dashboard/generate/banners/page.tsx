@@ -187,6 +187,12 @@ export default function BannersPage() {
   };
 
   const handleSaveAndContinue = async () => {
+    // Validate that at least one banner is selected
+    if (selectedBanners.length === 0) {
+      setGenerationError('Please select at least one banner to continue.');
+      return;
+    }
+
     // Save generated banners to storage for the results page
     await saveBanners(banners);
     localStorage.setItem('selectedBannerIds', JSON.stringify(selectedBanners));
@@ -199,6 +205,8 @@ export default function BannersPage() {
     // Clear cached banners
     await clearBanners();
     localStorage.removeItem('selectedBannerIds');
+    // Clear old ad copies since banners are being regenerated
+    localStorage.removeItem('aiGeneratedAdCopies');
     setSelectedBanners([]);
     setGenerationError(null);
 
@@ -465,8 +473,9 @@ export default function BannersPage() {
           {/* Save & Continue Button */}
           <button
             onClick={handleSaveAndContinue}
-            disabled={isGenerating}
+            disabled={isGenerating || selectedBanners.length === 0}
             className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-6 py-3 text-white font-medium transition-all hover:from-[#9333ea] hover:to-[#db2777] shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={selectedBanners.length === 0 ? 'Please select at least one banner' : ''}
           >
             <span>Save & Continue</span>
             <svg
