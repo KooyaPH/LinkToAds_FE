@@ -118,6 +118,12 @@ export default function StrategyPage() {
   const [extractedLogo, setExtractedLogo] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  
+  // Uploaded images state
+  const [uploadedLogo, setUploadedLogo] = useState<string | null>(null);
+  const [uploadedProductPhotos, setUploadedProductPhotos] = useState<string[]>([]);
+  const [logoFileInputRef, setLogoFileInputRef] = useState<HTMLInputElement | null>(null);
+  const [productPhotosFileInputRef, setProductPhotosFileInputRef] = useState<HTMLInputElement | null>(null);
 
   // Helper to check if an image URL is an SVG (not supported by Gemini API)
   const isSvgImage = (url: string): boolean => {
@@ -126,6 +132,112 @@ export default function StrategyPage() {
     return lowerUrl.endsWith('.svg') || 
            lowerUrl.includes('image/svg') || 
            lowerUrl.startsWith('data:image/svg');
+  };
+
+  // Convert file or blob to base64
+  const fileToBase64 = (file: File | Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Validate image file
+  const validateImageFile = (file: File): { valid: boolean; error?: string } => {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'];
+    
+    if (!allowedTypes.includes(file.type)) {
+      return { valid: false, error: 'Invalid file type. Please upload JPG, PNG, WebP, or SVG.' };
+    }
+    
+    if (file.size > maxSize) {
+      return { valid: false, error: 'File size exceeds 5MB limit.' };
+    }
+    
+    return { valid: true };
+  };
+
+  // Handle logo upload
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      alert(validation.error);
+      return;
+    }
+
+    // Check if SVG (not supported)
+    if (file.type === 'image/svg+xml') {
+      alert('SVG files are not supported. Please upload PNG, JPG, or WebP.');
+      return;
+    }
+
+    try {
+      const base64 = await fileToBase64(file);
+      setUploadedLogo(base64);
+      setLogoError(false);
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      alert('Failed to upload logo. Please try again.');
+    }
+  };
+
+  // Handle product photos upload
+  const handleProductPhotosUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    const maxPhotos = 4;
+    const remainingSlots = maxPhotos - uploadedProductPhotos.length;
+    
+    if (files.length > remainingSlots) {
+      alert(`You can only upload up to ${maxPhotos} product photos. ${uploadedProductPhotos.length} already uploaded.`);
+      return;
+    }
+
+    const validFiles: File[] = [];
+    for (const file of files) {
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        alert(`${file.name}: ${validation.error}`);
+        continue;
+      }
+      
+      // Check if SVG (not supported)
+      if (file.type === 'image/svg+xml') {
+        alert(`${file.name}: SVG files are not supported. Please upload PNG, JPG, or WebP.`);
+        continue;
+      }
+      
+      validFiles.push(file);
+    }
+
+    try {
+      const base64Promises = validFiles.map(file => fileToBase64(file));
+      const base64Images = await Promise.all(base64Promises);
+      setUploadedProductPhotos(prev => [...prev, ...base64Images]);
+    } catch (error) {
+      console.error('Error uploading product photos:', error);
+      alert('Failed to upload some photos. Please try again.');
+    }
+  };
+
+  // Remove uploaded logo
+  const removeUploadedLogo = () => {
+    setUploadedLogo(null);
+    if (logoFileInputRef) {
+      logoFileInputRef.value = '';
+    }
+  };
+
+  // Remove uploaded product photo
+  const removeUploadedProductPhoto = (index: number) => {
+    setUploadedProductPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
   // Fetch plan data
@@ -700,26 +812,71 @@ export default function StrategyPage() {
                     />
                   </svg>
                   <h3 className="text-sm font-semibold text-white">Brand Logo</h3>
-                  <span className="text-xs text-zinc-400">Optional • 0/1</span>
+                  <span className="text-xs text-zinc-400">Optional • {uploadedLogo ? '1/1' : '0/1'}</span>
                 </div>
 
                 {/* Upload Area */}
-                <div className="mb-4 rounded-lg border-2 border-dashed border-[#141533] bg-[#0a0a12] p-6 text-center cursor-pointer hover:border-[#6a4cff] transition-colors">
-                  <svg
-                    className="h-8 w-8 mx-auto mb-2 text-[#6a4cff]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                    />
-                  </svg>
-                  <p className="text-sm text-white mb-1">Tap to upload</p>
-                  <p className="text-xs text-zinc-400">PNG, SVG or JPG • Max 5MB</p>
+                <div 
+                  onClick={() => logoFileInputRef?.click()}
+                  className="mb-4 rounded-lg border-2 border-dashed border-[#141533] bg-[#0a0a12] p-6 text-center cursor-pointer hover:border-[#6a4cff] transition-colors"
+                >
+                  <input
+                    ref={setLogoFileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
+                  {uploadedLogo ? (
+                    <div className="relative">
+                      <img
+                        src={uploadedLogo}
+                        alt="Uploaded logo"
+                        className="h-24 w-24 mx-auto object-contain rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeUploadedLogo();
+                        }}
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors"
+                      >
+                        <svg
+                          className="h-4 w-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                      <p className="text-xs text-zinc-400 mt-2">Click to change</p>
+                    </div>
+                  ) : (
+                    <>
+                      <svg
+                        className="h-8 w-8 mx-auto mb-2 text-[#6a4cff]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      <p className="text-sm text-white mb-1">Tap to upload</p>
+                      <p className="text-xs text-zinc-400">PNG, JPG or WebP • Max 5MB</p>
+                    </>
+                  )}
                 </div>
 
                 {/* Found on website */}
@@ -741,6 +898,23 @@ export default function StrategyPage() {
                       </div>
                       <button
                         type="button"
+                        onClick={async () => {
+                          try {
+                            // Convert extracted logo to base64 if it's a URL
+                            if (extractedLogo && !extractedLogo.startsWith('data:')) {
+                              const response = await fetch(extractedLogo);
+                              const blob = await response.blob();
+                              const base64 = await fileToBase64(blob);
+                              setUploadedLogo(base64);
+                            } else if (extractedLogo) {
+                              setUploadedLogo(extractedLogo);
+                            }
+                            setLogoError(false);
+                          } catch (error) {
+                            console.error('Error using extracted logo:', error);
+                            alert('Failed to use extracted logo. Please try uploading manually.');
+                          }
+                        }}
                         className="text-xs text-[#6a4cff] hover:text-[#8a6cff] transition-colors"
                       >
                         Use this logo
@@ -779,11 +953,22 @@ export default function StrategyPage() {
                     />
                   </svg>
                   <h3 className="text-sm font-semibold text-white">Product Photos</h3>
-                  <span className="text-xs text-zinc-400">Optional • 0/4</span>
+                  <span className="text-xs text-zinc-400">Optional • {uploadedProductPhotos.length}/4</span>
                 </div>
 
                 {/* Upload Area */}
-                <div className="mb-4 rounded-lg border-2 border-dashed border-[#141533] bg-[#0a0a12] p-6 text-center cursor-pointer hover:border-[#6a4cff] transition-colors">
+                <div 
+                  onClick={() => productPhotosFileInputRef?.click()}
+                  className="mb-4 rounded-lg border-2 border-dashed border-[#141533] bg-[#0a0a12] p-6 text-center cursor-pointer hover:border-[#6a4cff] transition-colors"
+                >
+                  <input
+                    ref={setProductPhotosFileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    multiple
+                    onChange={handleProductPhotosUpload}
+                    className="hidden"
+                  />
                   <svg
                     className="h-8 w-8 mx-auto mb-2 text-[#6a4cff]"
                     fill="none"
@@ -798,8 +983,47 @@ export default function StrategyPage() {
                     />
                   </svg>
                   <p className="text-sm text-white mb-1">Tap to upload</p>
-                  <p className="text-xs text-zinc-400">JPG, PNG or WebP • Max 5MB</p>
+                  <p className="text-xs text-zinc-400">JPG, PNG or WebP • Max 5MB • Up to {4 - uploadedProductPhotos.length} more</p>
                 </div>
+
+                {/* Uploaded Product Photos Preview */}
+                {uploadedProductPhotos.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-xs text-zinc-400 mb-2">Uploaded photos ({uploadedProductPhotos.length}/4)</h4>
+                    <div className="grid grid-cols-4 gap-2">
+                      {uploadedProductPhotos.map((photo, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-square rounded-lg border border-[#141533] bg-[#0a0a12] overflow-hidden">
+                            <img
+                              src={photo}
+                              alt={`Uploaded product photo ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeUploadedProductPhoto(index)}
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                          >
+                            <svg
+                              className="h-4 w-4 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={3}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Found on website */}
                 {extractedImages.length > 0 && (
@@ -903,24 +1127,45 @@ export default function StrategyPage() {
             </div>
 
             {/* Footer Message */}
-            <div className="mt-6 pt-4 border-t border-[#141533] flex items-center gap-2">
-              <svg
-                className="h-4 w-4 text-[#6a4cff]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                />
-              </svg>
-              <p className="text-xs text-zinc-400">
-                No assets uploaded. AI will generate fully creative banners with AI-generated visuals.
-              </p>
-            </div>
+            {(uploadedLogo || uploadedProductPhotos.length > 0 || (extractedLogo && !logoError) || selectedProductPhoto !== null) ? (
+              <div className="mt-6 pt-4 border-t border-[#141533] flex items-center gap-2">
+                <svg
+                  className="h-4 w-4 text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <p className="text-xs text-green-400">
+                  Brand assets ready! Your uploaded images will be used in banner generation.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-6 pt-4 border-t border-[#141533] flex items-center gap-2">
+                <svg
+                  className="h-4 w-4 text-[#6a4cff]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                  />
+                </svg>
+                <p className="text-xs text-zinc-400">
+                  No assets uploaded. AI will generate fully creative banners with AI-generated visuals.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* AI-Extracted Insights */}
@@ -1735,10 +1980,26 @@ export default function StrategyPage() {
                     selectedLogo?: string;
                     selectedProductImage?: string;
                     productImageUrl?: string;
+                    productImages?: string[];
+                    logoImage?: string;
+                    assetPromptNote?: string;
                   } = {};
 
-                  // Save selected product photo if any (excluding SVG which is not supported)
-                  if (selectedProductPhoto !== null && extractedImages[selectedProductPhoto] && !isSvgImage(extractedImages[selectedProductPhoto].src)) {
+                  // Priority: Use uploaded logo first, then extracted logo
+                  if (uploadedLogo) {
+                    brandAssets.selectedLogo = uploadedLogo;
+                    brandAssets.logoImage = uploadedLogo;
+                  } else if (extractedLogo && !logoError && !isSvgImage(extractedLogo)) {
+                    brandAssets.selectedLogo = extractedLogo;
+                    brandAssets.logoImage = extractedLogo;
+                  }
+
+                  // Priority: Use uploaded product photos first, then extracted product photo
+                  if (uploadedProductPhotos.length > 0) {
+                    // Use the first uploaded product photo and pass all for prompt context
+                    brandAssets.selectedProductImage = uploadedProductPhotos[0];
+                    brandAssets.productImages = uploadedProductPhotos;
+                  } else if (selectedProductPhoto !== null && extractedImages[selectedProductPhoto] && !isSvgImage(extractedImages[selectedProductPhoto].src)) {
                     const selectedImage = extractedImages[selectedProductPhoto];
                     brandAssets.productImageUrl = selectedImage.src;
                     // Convert to base64 for the API
@@ -1757,9 +2018,16 @@ export default function StrategyPage() {
                     }
                   }
 
-                  // Save selected logo if any (excluding SVG which is not supported)
-                  if (extractedLogo && !logoError && !isSvgImage(extractedLogo)) {
-                    brandAssets.selectedLogo = extractedLogo;
+                  // Add a short prompt note to help the generator prioritize uploads
+                  const logoNote = brandAssets.logoImage ? 'User uploaded a brand logo.' : '';
+                  const productNote = brandAssets.productImages?.length
+                    ? `User uploaded ${brandAssets.productImages.length} product photo(s); use them prominently.`
+                    : brandAssets.selectedProductImage
+                      ? 'Use the provided product image.'
+                      : '';
+                  const combinedNote = [logoNote, productNote].filter(Boolean).join(' ');
+                  if (combinedNote) {
+                    brandAssets.assetPromptNote = combinedNote;
                   }
 
                   // Save brand assets to localStorage

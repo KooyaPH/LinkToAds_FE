@@ -71,9 +71,11 @@ export default function Sidebar() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchAdminStatus = async (userId: string) => {
+    // Best-effort admin checks:
+    // 1) Supabase table (only works if RLS/session allows)
+    // 2) Backend API `/auth/admin/users?isAdmin=true` (works with JWT token)
+    const fetchAdminStatusSupabase = async (userId: string) => {
       try {
-        // Query Supabase directly using the user ID (works even without Supabase session)
         const { data: userData, error } = await supabase
           .from('users')
           .select('is_admin')
@@ -81,14 +83,25 @@ export default function Sidebar() {
           .single();
         
         if (!error && userData?.is_admin) {
-          setIsAdmin(true);
           return true;
         }
-        setIsAdmin(false);
         return false;
       } catch (error) {
-        console.error("Error fetching admin status:", error);
-        setIsAdmin(false);
+        console.warn("Supabase admin check failed (likely RLS):", error);
+        return false;
+      }
+    };
+
+    const fetchAdminStatusApi = async (email: string) => {
+      try {
+        const response = await api.getAdminOnlyUsers?.();
+        if (response?.success && response.data?.users) {
+          const isAdminUser = response.data.users.some((u) => u.email === email);
+          return isAdminUser;
+        }
+        return false;
+      } catch (error) {
+        console.warn("API admin check failed:", error);
         return false;
       }
     };
@@ -131,10 +144,15 @@ export default function Sidebar() {
       // Update email state
       if (foundEmail) {
         setUserEmail(foundEmail);
-        // Fetch admin status if we have a user ID
+        // Try Supabase check first; if false, try API check (requires JWT)
+        let admin = false;
         if (userId) {
-          await fetchAdminStatus(userId);
+          admin = await fetchAdminStatusSupabase(userId);
         }
+        if (!admin && foundEmail) {
+          admin = await fetchAdminStatusApi(foundEmail);
+        }
+        setIsAdmin(admin);
       } else {
         setUserEmail("");
         setIsAdmin(false);
@@ -149,28 +167,41 @@ export default function Sidebar() {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user?.email) {
         setUserEmail(session.user.email);
-        
-        // Fetch admin status
+        let admin = false;
         if (session.user.id) {
-          await fetchAdminStatus(session.user.id);
+          admin = await fetchAdminStatusSupabase(session.user.id);
         }
+        if (!admin && session.user.email) {
+          admin = await fetchAdminStatusApi(session.user.email);
+        }
+        setIsAdmin(admin);
       } else {
         // If Supabase session is cleared, check localStorage (API auth)
         const apiUser = api.getUser();
         if (apiUser?.email) {
           setUserEmail(apiUser.email);
+          let admin = false;
           if (apiUser.id) {
-            await fetchAdminStatus(apiUser.id);
+            admin = await fetchAdminStatusSupabase(apiUser.id);
           }
+          if (!admin && apiUser.email) {
+            admin = await fetchAdminStatusApi(apiUser.email);
+          }
+          setIsAdmin(admin);
         } else {
           // Try to fetch from API one more time
           try {
             const response = await api.getCurrentUser();
             if (response.success && response.data?.user?.email) {
               setUserEmail(response.data.user.email);
+              let admin = false;
               if (response.data.user.id) {
-                await fetchAdminStatus(response.data.user.id);
+                admin = await fetchAdminStatusSupabase(response.data.user.id);
               }
+              if (!admin && response.data.user.email) {
+                admin = await fetchAdminStatusApi(response.data.user.email);
+              }
+              setIsAdmin(admin);
             } else {
               setUserEmail("");
               setIsAdmin(false);
