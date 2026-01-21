@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSidebar } from "./SidebarContext";
 import { api } from "@/lib/api";
-import { supabase } from "@/lib/supabase";
+import { supabase, signOutSupabase } from "@/lib/supabase";
 
 type NavItem = {
   href: string;
@@ -65,6 +65,7 @@ const navItems: NavItem[] = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isOpen, close } = useSidebar();
   const [userEmail, setUserEmail] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -83,27 +84,43 @@ export default function Sidebar() {
           setIsAdmin(true);
           return true;
         }
+        setIsAdmin(false);
         return false;
       } catch (error) {
         console.error("Error fetching admin status:", error);
+        setIsAdmin(false);
         return false;
       }
     };
 
     const fetchUserData = async () => {
-      // Try to get user from localStorage (API auth)
-      const apiUser = api.getUser();
-      if (apiUser?.email) {
-        setUserEmail(apiUser.email);
-        // Check admin status using API user ID
-        if (apiUser.id) {
-          await fetchAdminStatus(apiUser.id);
+      let foundEmail = "";
+      let userId = "";
+
+      // First, check Supabase session (for users who logged in via Supabase/Google)
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) {
+          foundEmail = session.user.email;
+          userId = session.user.id;
+        }
+      } catch (error) {
+        console.error("Error fetching Supabase session:", error);
+      }
+
+      // If no Supabase session, check API auth (localStorage)
+      if (!foundEmail) {
+        const apiUser = api.getUser();
+        if (apiUser?.email) {
+          foundEmail = apiUser.email;
+          userId = apiUser.id || "";
         } else {
-          // If ID is missing, fetch current user from API
+          // Try to fetch current user from API if token exists
           try {
             const response = await api.getCurrentUser();
-            if (response.success && response.data?.user?.id) {
-              await fetchAdminStatus(response.data.user.id);
+            if (response.success && response.data?.user) {
+              foundEmail = response.data.user.email;
+              userId = response.data.user.id;
             }
           } catch (error) {
             console.error("Error fetching current user from API:", error);
@@ -111,19 +128,16 @@ export default function Sidebar() {
         }
       }
 
-      // Also check Supabase session (for users who logged in via Supabase)
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email) {
-          setUserEmail(session.user.email);
-          
-          // Fetch admin status using Supabase session user ID
-          if (session.user.id) {
-            await fetchAdminStatus(session.user.id);
-          }
+      // Update email state
+      if (foundEmail) {
+        setUserEmail(foundEmail);
+        // Fetch admin status if we have a user ID
+        if (userId) {
+          await fetchAdminStatus(userId);
         }
-      } catch (error) {
-        console.error("Error fetching Supabase session:", error);
+      } else {
+        setUserEmail("");
+        setIsAdmin(false);
       }
     };
 
@@ -138,10 +152,7 @@ export default function Sidebar() {
         
         // Fetch admin status
         if (session.user.id) {
-          const isAdmin = await fetchAdminStatus(session.user.id);
-          if (!isAdmin) {
-            setIsAdmin(false);
-          }
+          await fetchAdminStatus(session.user.id);
         }
       } else {
         // If Supabase session is cleared, check localStorage (API auth)
@@ -152,8 +163,22 @@ export default function Sidebar() {
             await fetchAdminStatus(apiUser.id);
           }
         } else {
-          setUserEmail("");
-          setIsAdmin(false);
+          // Try to fetch from API one more time
+          try {
+            const response = await api.getCurrentUser();
+            if (response.success && response.data?.user?.email) {
+              setUserEmail(response.data.user.email);
+              if (response.data.user.id) {
+                await fetchAdminStatus(response.data.user.id);
+              }
+            } else {
+              setUserEmail("");
+              setIsAdmin(false);
+            }
+          } catch (error) {
+            setUserEmail("");
+            setIsAdmin(false);
+          }
         }
       }
     });
@@ -162,6 +187,29 @@ export default function Sidebar() {
       subscription.unsubscribe();
     };
   }, []);
+
+  const handleLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    
+    try {
+      // Clear API auth (localStorage)
+      api.logout();
+      
+      // Sign out from Supabase
+      await signOutSupabase();
+      
+      // Clear user email and admin status
+      setUserEmail("");
+      setIsAdmin(false);
+      
+      // Redirect to login
+      router.push("/login");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Still redirect even if there's an error
+      router.push("/login");
+    }
+  };
 
   return (
     <>
@@ -286,15 +334,15 @@ export default function Sidebar() {
             {userEmail || "Loading..."}
           </span>
         </div>
-        <Link
-          href="/login"
-          className="flex items-center gap-3 text-sm text-white transition-colors hover:text-purple-400"
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 text-sm text-white transition-colors hover:text-purple-400"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
           Log Out
-        </Link>
+        </button>
       </div>
     </aside>
     </>

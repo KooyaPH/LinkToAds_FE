@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { steps } from "@/lib/generateConstants";
 import PlanCard from "@/components/PlanCard";
 import { api } from "@/lib/api";
+import { LoadingSpinner } from "@/components";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -427,11 +428,8 @@ export default function GeneratePage() {
               >
                 {isLoading ? (
                   <>
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Analyzing...
+                    <LoadingSpinner size="sm" variant="white" />
+                    <span>Analyzing...</span>
                   </>
                 ) : (
                   <>
@@ -484,10 +482,7 @@ export default function GeneratePage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     ) : index === progressStep ? (
-                      <svg className="h-5 w-5 flex-shrink-0 animate-spin text-[#a855f7]" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
+                      <LoadingSpinner size="sm" variant="white" className="flex-shrink-0" />
                     ) : (
                       <div className="h-5 w-5 flex-shrink-0 rounded-full border-2 border-zinc-500" />
                     )}

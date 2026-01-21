@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
+import { LoadingSpinner } from "@/components";
 
 interface EditSubscriptionModalProps {
   isOpen: boolean;
@@ -165,7 +166,7 @@ export default function EditSubscriptionModal({
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="h-5 w-5 animate-spin rounded-full border-4 border-zinc-600 border-t-purple-500"></div>
+            <LoadingSpinner size="sm" />
           </div>
         ) : (
           <>

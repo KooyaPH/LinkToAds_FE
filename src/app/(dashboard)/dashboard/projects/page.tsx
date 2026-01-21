@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useSidebar } from "@/components/Sidebar/SidebarContext";
 import { api } from "@/lib/api";
 import Toast from "@/components/Toast";
+import { LoadingSpinner } from "@/components";
 
 interface Project {
   id: string;
@@ -242,7 +243,7 @@ export default function ProjectsPage() {
         {/* Loading State */}
         {isLoading && (
           <div className="flex min-h-[400px] flex-col items-center justify-center rounded-xl border border-[#1a1a22] bg-[#0d1117] px-12 py-8">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-600 border-t-purple-500"></div>
+            <LoadingSpinner size="md" />
             <p className="mt-4 text-zinc-400">Loading projects...</p>
           </div>
         )}

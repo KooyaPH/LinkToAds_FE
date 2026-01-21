@@ -6,6 +6,7 @@ import { useSidebar } from "@/components/Sidebar/SidebarContext";
 import { api } from "@/lib/api";
 import { RecentProjectCard, type Project } from "@/components/RecentProjectCard";
 import { NewCampaignCard } from "@/components/NewCampaignCard";
+import { LoadingSpinner } from "@/components";
 
 // Plan display names
 const PLAN_INFO: Record<string, { name: string }> = {
@@ -233,7 +234,7 @@ export default function DashboardPage() {
           {/* Loading State */}
           {isLoading ? (
             <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-[#1a183e] bg-[#0d1117] p-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-600 border-t-purple-500"></div>
+              <LoadingSpinner size="sm" />
               <p className="mt-4 text-zinc-400">Loading projects...</p>
             </div>
           ) : projects.length === 0 ? (
