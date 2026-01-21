@@ -218,7 +218,20 @@ export default function UpgradePlanModal({
           {/* Pricing Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {/* Starter Pack */}
-            <div className="relative rounded-xl border border-[#1a1a22] bg-[#12121a] p-6 flex flex-col">
+            <div
+              className={`relative rounded-xl border-2 p-6 flex flex-col ${
+                currentPlan === "starter" || currentPlan === "starterPack"
+                  ? "border-[#6a4cff] bg-[#12121a]"
+                  : "border-[#1a1a22] bg-[#12121a]"
+              }`}
+            >
+              {(currentPlan === "starter" || currentPlan === "starterPack") && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-[#6348f0] text-white text-xs font-bold px-3 py-1 rounded-full">
+                    Current
+                  </span>
+                </div>
+              )}
               <div className="mb-4">
                 <h3 className="text-lg font-bold text-white mb-2">Starter Pack</h3>
                 <div className="flex items-baseline gap-1">
@@ -277,9 +290,15 @@ export default function UpgradePlanModal({
                   <span className="text-sm text-white">Never expires</span>
                 </li>
               </ul>
-              <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all mt-auto">
-                Select
-              </button>
+              {(currentPlan === "starter" || currentPlan === "starterPack") ? (
+                <button className="w-full rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-all mt-auto">
+                  Current Plan
+                </button>
+              ) : (
+                <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all mt-auto">
+                  Select
+                </button>
+              )}
             </div>
 
             {/* Creator - Current Plan */}
@@ -292,7 +311,7 @@ export default function UpgradePlanModal({
             >
               {currentPlan === "creator" && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  <span className="bg-[#6348f0] text-white text-xs font-bold px-3 py-1 rounded-full">
                     Current
                   </span>
                 </div>
@@ -385,7 +404,20 @@ export default function UpgradePlanModal({
             </div>
 
             {/* Business */}
-            <div className="relative rounded-xl border border-[#1a1a22] bg-[#12121a] p-6 flex flex-col">
+            <div
+              className={`relative rounded-xl border-2 p-6 flex flex-col ${
+                currentPlan === "business"
+                  ? "border-[#6a4cff] bg-[#12121a]"
+                  : "border-[#1a1a22] bg-[#12121a]"
+              }`}
+            >
+              {currentPlan === "business" && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-[#6348f0] text-white text-xs font-bold px-3 py-1 rounded-full">
+                    Current
+                  </span>
+                </div>
+              )}
               <div className="mb-4">
                 <h3 className="text-lg font-bold text-white mb-2">Business</h3>
                 {(() => {
@@ -462,13 +494,32 @@ export default function UpgradePlanModal({
                   <span className="text-sm text-white">Priority Rendering</span>
                 </li>
               </ul>
-              <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all mt-auto">
-                Select
-              </button>
+              {currentPlan === "business" ? (
+                <button className="w-full rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-all mt-auto">
+                  Current Plan
+                </button>
+              ) : (
+                <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all mt-auto">
+                  Select
+                </button>
+              )}
             </div>
 
             {/* Agency */}
-            <div className="relative rounded-xl border border-[#1a1a22] bg-[#12121a] p-6 flex flex-col">
+            <div
+              className={`relative rounded-xl border-2 p-6 flex flex-col ${
+                currentPlan === "agency"
+                  ? "border-[#6a4cff] bg-[#12121a]"
+                  : "border-[#1a1a22] bg-[#12121a]"
+              }`}
+            >
+              {currentPlan === "agency" && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-[#6348f0] text-white text-xs font-bold px-3 py-1 rounded-full">
+                    Current
+                  </span>
+                </div>
+              )}
               <div className="mb-4">
                 <h3 className="text-lg font-bold text-white mb-2">Agency</h3>
                 {(() => {
@@ -545,9 +596,15 @@ export default function UpgradePlanModal({
                   <span className="text-sm text-white">API Access</span>
                 </li>
               </ul>
-              <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all mt-auto">
-                Select
-              </button>
+              {currentPlan === "agency" ? (
+                <button className="w-full rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-all mt-auto">
+                  Current Plan
+                </button>
+              ) : (
+                <button className="w-full rounded-lg bg-[#1a1a22] border border-[#202a3a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#202a3a] transition-all mt-auto">
+                  Select
+                </button>
+              )}
             </div>
           </div>
 

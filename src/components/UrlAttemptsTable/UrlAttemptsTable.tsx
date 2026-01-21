@@ -20,10 +20,12 @@ export default function UrlAttemptsTable() {
   const [urlAttempts, setUrlAttempts] = useState<UrlAttempt[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [totalAttempts, setTotalAttempts] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [stageOpen, setStageOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
+  const itemsPerPage = 25;
 
   const stages = ["Scrape", "Generate", "Complete"];
   const statuses = ["Success", "Error", "Pending"];
@@ -48,12 +50,13 @@ export default function UrlAttemptsTable() {
   const fetchUrlAttempts = useCallback(async () => {
     setIsLoading(true);
     try {
+      const offset = (currentPage - 1) * itemsPerPage;
       const response = await api.getUrlAttempts({
         search: searchQuery || undefined,
         stage: filterStage !== "All Stages" ? filterStage : undefined,
         status: filterStatus !== "All Status" ? filterStatus : undefined,
-        limit: 100,
-        offset: 0,
+        limit: itemsPerPage,
+        offset: offset,
       });
 
       if (response.success && response.data) {
@@ -65,11 +68,19 @@ export default function UrlAttemptsTable() {
     } finally {
       setIsLoading(false);
     }
-  }, [searchQuery, filterStage, filterStatus]);
+  }, [searchQuery, filterStage, filterStatus, currentPage]);
 
   useEffect(() => {
     fetchUrlAttempts();
   }, [fetchUrlAttempts]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterStage, filterStatus]);
+
+  const totalPages = Math.ceil(totalAttempts / itemsPerPage);
+  const hasPagination = totalAttempts > itemsPerPage;
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -543,6 +554,46 @@ export default function UrlAttemptsTable() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {hasPagination && (
+        <div className="border-t border-[#1a1a22] p-6">
+          <div className="flex justify-end">
+            <div className="flex items-center gap-3">
+              {/* Previous Button */}
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg border border-[#1a1a22] text-sm font-medium transition-colors ${
+                  currentPage === 1
+                    ? 'bg-[#0a0a0f] text-zinc-600 cursor-not-allowed'
+                    : 'bg-[#1a1a22] text-white hover:bg-[#25252f] cursor-pointer'
+                }`}
+              >
+                Previous
+              </button>
+
+              {/* Page Number */}
+              <span className="px-4 py-2 text-sm text-white">
+                Page {currentPage}
+              </span>
+
+              {/* Next Button */}
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-lg border border-[#1a1a22] text-sm font-medium transition-colors ${
+                  currentPage === totalPages
+                    ? 'bg-[#0a0a0f] text-zinc-600 cursor-not-allowed'
+                    : 'bg-[#1a1a22] text-white hover:bg-[#25252f] cursor-pointer'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

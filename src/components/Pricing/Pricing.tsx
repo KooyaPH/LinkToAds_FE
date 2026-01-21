@@ -72,9 +72,21 @@ const plans = [
 
 function CheckIcon() {
   return (
-    <svg className="h-4 w-4 flex-shrink-0 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-    </svg>
+    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#1d1b49]">
+      <svg className="h-3 w-3 text-[#6348f0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+  );
+}
+
+function HighlightedCheckIcon() {
+  return (
+    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#1d1b49]">
+      <svg className="h-3 w-3 text-[#6348f0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
   );
 }
 
@@ -113,7 +125,7 @@ export default function Pricing() {
       {/* Headline */}
       <h2 className="text-center text-3xl font-bold text-white md:text-4xl">
         Simple, Transparent{" "}
-        <span className="bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
           Pricing
         </span>
       </h2>
@@ -129,15 +141,15 @@ export default function Pricing() {
           <button
             key={option.id}
             onClick={() => setBillingPeriod(option.id)}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition-all ${
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
               billingPeriod === option.id
-                ? "bg-gradient-to-r from-[#22d3ee] to-[#a855f7] text-white"
-                : "text-zinc-400 hover:text-white"
+                ? "bg-[#6a4cff] text-white"
+                : "text-white hover:text-white"
             }`}
           >
             {option.label}
             {option.discount > 0 && (
-              <span className={`ml-1 text-xs ${billingPeriod === option.id ? "text-white" : "text-cyan-400"}`}>
+              <span className={`ml-1 text-xs ${billingPeriod === option.id ? "text-white" : "text-green-400"}`}>
                 -{option.discount}%
               </span>
             )}
@@ -168,13 +180,13 @@ export default function Pricing() {
           >
             {/* Badge */}
             {plan.badge && (
-              <span className="absolute -top-3 right-4 rounded-full bg-gradient-to-r from-[#22d3ee] to-[#a855f7] px-3 py-1 text-xs font-semibold text-white">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-3 py-1 text-xs font-semibold text-white">
                 {plan.badge}
               </span>
             )}
 
             {/* Plan Name */}
-            <h3 className="text-lg font-medium text-zinc-400">{plan.name}</h3>
+            <h3 className={`${plan.highlighted ? "text-xl font-bold text-white" : "text-lg font-medium text-zinc-400"}`}>{plan.name}</h3>
 
             {/* Price */}
             <div className="mt-2 flex items-baseline gap-1">
@@ -197,8 +209,8 @@ export default function Pricing() {
             {/* Features */}
             <ul className="mt-6 flex-1 space-y-3">
               {plan.features.map((feature) => (
-                <li key={feature} className="flex items-center gap-2 text-sm text-zinc-300">
-                  <CheckIcon />
+                <li key={feature} className="flex items-center gap-2 text-sm text-white">
+                  {plan.highlighted ? <HighlightedCheckIcon /> : <CheckIcon />}
                   {feature}
                 </li>
               ))}
@@ -208,7 +220,7 @@ export default function Pricing() {
             <button
               className={`mt-6 w-full rounded-lg py-3 text-sm font-semibold transition-all ${
                 plan.highlighted
-                  ? "bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] text-white hover:opacity-90"
+                  ? "bg-gradient-to-r from-[#a855f7] to-[#ec4899] text-white hover:opacity-90"
                   : "border border-white/10 bg-transparent text-white hover:bg-white/5"
               }`}
             >
@@ -265,21 +277,21 @@ export default function Pricing() {
       </div>
 
       {/* Credits Info */}
-      <div className="mt-8 w-full max-w-3xl rounded-xl border border-white/10 bg-[#0d0d1a] p-6">
-        <div className="flex items-start gap-3">
-          <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div>
-            <h4 className="font-semibold text-white">How Credits Work</h4>
-            <p className="mt-1 text-sm text-zinc-400">
-              <span className="text-cyan-400">1 Credit = 1 Ad Generation</span> — simple as that.{" "}
-              <span className="text-zinc-300">Manual Edits</span> (changing text/color yourself) are{" "}
-              <span className="text-green-400">100% FREE</span> on all plans. Only{" "}
-              <span className="text-zinc-300">AI Text Regeneration</span> costs credits (unless you're on the{" "}
-              <span className="text-cyan-400">Creator plan or above</span> where it's unlimited).
-            </p>
+      <div className="mt-8 w-full max-w-5xl rounded-xl border border-[#251f48] bg-[#1a1a22] p-6">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex items-center gap-3 mb-4">
+            <svg className="h-5 w-5 flex-shrink-0 text-[#8660b6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h4 className="font-bold text-white">How Credits Work</h4>
           </div>
+          <p className="text-sm text-zinc-400">
+            <span className="text-[#6a4cff]">1 Credit = 1 Ad Generation</span> — simple as that.{" "}
+            <span className="text-[#22c55e]">Manual Edits</span> <span className="text-zinc-400">(changing text/color yourself)</span> are{" "}
+            <span className="font-bold text-[#22c55e]">100% FREE</span> <span className="text-zinc-400">on all plans. Only</span>{" "}
+            <span className="text-[#6a4cff]">AI Text Regeneration</span> <span className="text-zinc-400">costs credits (unless you're on the</span>{" "}
+            <span className="font-bold text-[#8660b6]">Creator plan or above</span> <span className="text-zinc-400">where it's unlimited).</span>
+          </p>
         </div>
       </div>
     </section>

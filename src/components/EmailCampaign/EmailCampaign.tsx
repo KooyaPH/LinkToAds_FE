@@ -36,6 +36,7 @@ export default function EmailCampaign() {
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const [totalLogs, setTotalLogs] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [stats, setStats] = useState({
     sentToday: 0,
     sentThisWeek: 0,
@@ -45,6 +46,7 @@ export default function EmailCampaign() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [recipientCount, setRecipientCount] = useState(0);
   const [isLoadingRecipientCount, setIsLoadingRecipientCount] = useState(false);
+  const itemsPerPage = 25;
 
   // Calculate stats from email logs as fallback/verification
   const calculateStatsFromLogs = (logs: EmailLog[]) => {
@@ -119,12 +121,13 @@ export default function EmailCampaign() {
   const fetchEmailLogs = useCallback(async () => {
     setIsLoadingLogs(true);
     try {
+      const offset = (currentPage - 1) * itemsPerPage;
       const response = await api.getEmailLogs({
         search: searchQuery || undefined,
         emailType: filterType !== "All Types" ? filterType : undefined,
         status: filterStatus !== "All" ? filterStatus : undefined,
-        limit: 100,
-        offset: 0,
+        limit: itemsPerPage,
+        offset: offset,
       });
 
       if (response.success && response.data) {
@@ -144,12 +147,20 @@ export default function EmailCampaign() {
     } finally {
       setIsLoadingLogs(false);
     }
-  }, [searchQuery, filterType, filterStatus]);
+  }, [searchQuery, filterType, filterStatus, currentPage]);
 
   // Fetch logs on mount and when filters change
   useEffect(() => {
     fetchEmailLogs();
   }, [fetchEmailLogs]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterType, filterStatus]);
+
+  const totalPages = Math.ceil(totalLogs / itemsPerPage);
+  const hasPagination = totalLogs > itemsPerPage;
 
   // Handle preview/send button click - show confirmation modal
   const handlePreviewAndSend = async () => {
@@ -847,6 +858,46 @@ export default function EmailCampaign() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {hasPagination && (
+          <div className="border-t border-[#1a1a22] p-6">
+            <div className="flex justify-end">
+              <div className="flex items-center gap-3">
+                {/* Previous Button */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg border border-[#1a1a22] text-sm font-medium transition-colors ${
+                    currentPage === 1
+                      ? 'bg-[#0a0a0f] text-zinc-600 cursor-not-allowed'
+                      : 'bg-[#1a1a22] text-white hover:bg-[#25252f] cursor-pointer'
+                  }`}
+                >
+                  Previous
+                </button>
+
+                {/* Page Number */}
+                <span className="px-4 py-2 text-sm text-white">
+                  Page {currentPage}
+                </span>
+
+                {/* Next Button */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-lg border border-[#1a1a22] text-sm font-medium transition-colors ${
+                    currentPage === totalPages
+                      ? 'bg-[#0a0a0f] text-zinc-600 cursor-not-allowed'
+                      : 'bg-[#1a1a22] text-white hover:bg-[#25252f] cursor-pointer'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

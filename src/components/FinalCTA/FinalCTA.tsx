@@ -38,7 +38,7 @@ export default function FinalCTA() {
         {/* Headline */}
         <h2 className="mt-6 text-center text-3xl font-bold text-white md:text-4xl">
           Ready to Create{" "}
-          <span className="bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
             Winning Ads?
           </span>
         </h2>
@@ -61,7 +61,7 @@ export default function FinalCTA() {
         {/* CTA Buttons */}
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            href="/get-started"
+            href="/login"
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-8 py-3.5 font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
           >
             Generate Your First Ad
@@ -70,7 +70,7 @@ export default function FinalCTA() {
             </svg>
           </Link>
           <Link
-            href="/pricing"
+            href="#pricing"
             className="inline-flex items-center gap-2 px-6 py-3.5 font-semibold text-white transition-all hover:text-zinc-300"
           >
             View Pricing

@@ -7,9 +7,9 @@ export default function CTA() {
     <section className="w-screen border-y border-white/10 bg-[#0d0d1a] px-6 py-16">
       <div className="mx-auto flex max-w-4xl flex-col items-center">
         {/* Badge */}
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+        <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#10122c] px-3 py-1.5">
           <span className="text-xs">✨</span>
-          <span className="text-xs font-medium text-zinc-300">
+          <span className="text-xs font-medium text-[#6348f0]">
             Ready to transform your ads?
           </span>
         </div>

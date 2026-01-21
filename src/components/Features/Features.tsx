@@ -87,7 +87,7 @@ export default function Features() {
       {/* Headline */}
       <h2 className="max-w-3xl text-center text-2xl font-bold text-white md:text-3xl lg:text-4xl">
         Everything You Need to{" "}
-        <span className="bg-gradient-to-r from-[#22d3ee] via-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-[#6666FF] to-[#FF66FF] bg-clip-text text-transparent">
           Create Winning Ads
         </span>
       </h2>

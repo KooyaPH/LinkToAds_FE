@@ -71,8 +71,8 @@ export default function Comparison() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${
                 activeTab === tab.id
-                  ? "bg-gradient-to-r from-[#22d3ee] to-[#a855f7] text-white"
-                  : "text-zinc-400 hover:text-white"
+                  ? "bg-[#6666FF] text-white"
+                  : "text-white"
               }`}
             >
               {tab.label}
@@ -129,7 +129,7 @@ export default function Comparison() {
           <div className="relative flex-1 rounded-xl border-2 border-purple-500/50 bg-[#0d0d1a] shadow-[0_0_30px_rgba(168,85,247,0.3),0_0_60px_rgba(168,85,247,0.1)]">
             {/* Best Choice Badge */}
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="whitespace-nowrap rounded-full bg-gradient-to-r from-[#22d3ee] to-[#a855f7] px-4 py-1.5 text-xs font-semibold text-white shadow-lg">
+              <span className="whitespace-nowrap rounded-full bg-gradient-to-r from-[#6666FF] to-[#FF66FF] px-4 py-1.5 text-xs font-semibold text-white shadow-lg">
                 Best Choice
               </span>
             </div>

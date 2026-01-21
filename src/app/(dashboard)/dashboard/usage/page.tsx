@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useSidebar } from "@/components/Sidebar/SidebarContext";
 import { api } from "@/lib/api";
 import UpgradePlanModal from "@/components/UpgradePlanModal";
@@ -241,8 +240,8 @@ export default function UsagePage() {
                 {usageData.isUnlimited ? "Unlimited" : usageData.remainingThisMonth}
               </p>
               {!usageData.isUnlimited && (
-                <Link
-                  href="/pricing"
+                <button
+                  onClick={() => setIsModalOpen(true)}
                   className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25"
                 >
                   Upgrade Plan
@@ -259,7 +258,7 @@ export default function UsagePage() {
                       d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                     />
                   </svg>
-                </Link>
+                </button>
               )}
             </div>
           </div>

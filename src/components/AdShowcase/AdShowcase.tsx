@@ -40,8 +40,8 @@ export default function AdShowcase() {
   return (
     <section className="flex flex-col items-center px-6 py-12">
       {/* Badge */}
-      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-5 py-2">
-        <span className="text-sm font-medium text-purple-400">
+      <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-[#10122c] px-5 py-2">
+        <span className="text-sm font-medium text-[#6348f0]">
           20 Ad Archetypes • Proven to Convert
         </span>
       </div>
