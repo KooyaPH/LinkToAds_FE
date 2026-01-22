@@ -36,6 +36,7 @@ export default function ProjectAdCard({
 }: ProjectAdCardProps) {
   const [showFullContent, setShowFullContent] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("Ad text copied!");
   const [showCheckmark, setShowCheckmark] = useState(false);
 
   // Get first letter of brand name for avatar
@@ -51,6 +52,7 @@ export default function ProjectAdCard({
   // Handle copy to clipboard
   const handleCopy = () => {
     navigator.clipboard.writeText(ad.content);
+    setToastMessage("Ad text copied!");
     setShowToast(true);
     setShowCheckmark(true);
     
@@ -62,20 +64,66 @@ export default function ProjectAdCard({
 
 
   // Handle download image
-  const handleDownloadImage = async () => {
+  const handleDownloadImage = async (e?: React.MouseEvent) => {
+    // Prevent event propagation if event is provided
+    if (e) {
+      e.stopPropagation();
+    }
+    
     try {
-      const response = await fetch(ad.image_url);
+      // Fetch the image with CORS mode
+      const response = await fetch(ad.image_url, {
+        mode: 'cors',
+        cache: 'no-cache',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      
       const blob = await response.blob();
+      
+      // Determine file extension from blob type or URL
+      let fileExtension = 'jpg';
+      if (blob.type) {
+        if (blob.type.includes('png')) fileExtension = 'png';
+        else if (blob.type.includes('webp')) fileExtension = 'webp';
+        else if (blob.type.includes('gif')) fileExtension = 'gif';
+      } else {
+        // Fallback: check URL extension
+        const urlLower = ad.image_url.toLowerCase();
+        if (urlLower.includes('.png')) fileExtension = 'png';
+        else if (urlLower.includes('.webp')) fileExtension = 'webp';
+        else if (urlLower.includes('.gif')) fileExtension = 'gif';
+      }
+      
+      // Create object URL
       const url = window.URL.createObjectURL(blob);
+      
+      // Create download link
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${ad.title || 'ad'}.jpg`;
+      link.download = `${ad.title || 'ad'}-${ad.id}.${fileExtension}`;
+      link.style.display = 'none';
+      
+      // Trigger download
       document.body.appendChild(link);
       link.click();
+      
+      // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      
+      // Show success toast
+      setToastMessage("Image downloaded successfully!");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
     } catch (error) {
       console.error('Failed to download image:', error);
+      // Show error toast
+      setToastMessage("Failed to download image. Please try again.");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
     }
   };
 
@@ -304,7 +352,7 @@ export default function ProjectAdCard({
             Copy
           </button>
           <button
-            onClick={() => onDownload(ad)}
+            onClick={handleDownloadImage}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-[#6666FF] to-[#FF66FF] text-white text-sm font-medium hover:from-[#7a5cff] hover:to-[#ff77ff] transition-all shadow-lg shadow-purple-500/20"
           >
             <svg
@@ -328,7 +376,7 @@ export default function ProjectAdCard({
       {/* Toast Notification */}
       <Toast
         show={showToast}
-        message="Ad text copied!"
+        message={toastMessage}
         onClose={() => setShowToast(false)}
         duration={3000}
         position="top-right"

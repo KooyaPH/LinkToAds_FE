@@ -7,6 +7,7 @@ import { useSidebar } from "@/components/Sidebar/SidebarContext";
 import { api } from "@/lib/api";
 import { ProjectAdsGrid, AdLightbox, Ad } from "@/components/ProjectAds";
 import { LoadingSpinner } from "@/components";
+import Toast from "@/components/Toast";
 
 interface Project {
   id: string;
@@ -34,6 +35,8 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
   const [deletingAdId, setDeletingAdId] = useState<string | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   // Fetch project on mount
   useEffect(() => {
@@ -69,24 +72,79 @@ export default function ProjectDetailPage() {
     });
   };
 
-  // Handle download
-  const handleDownload = (ad: Ad) => {
-    const link = document.createElement("a");
-    link.href = ad.image_url;
-    link.download = `${ad.title || "ad"}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // Handle download single image
+  const handleDownload = async (ad: Ad) => {
+    try {
+      // Fetch the image with CORS mode
+      const response = await fetch(ad.image_url, {
+        mode: 'cors',
+        cache: 'no-cache',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      
+      const blob = await response.blob();
+      
+      // Determine file extension from blob type or URL
+      let fileExtension = 'jpg';
+      if (blob.type) {
+        if (blob.type.includes('png')) fileExtension = 'png';
+        else if (blob.type.includes('webp')) fileExtension = 'webp';
+        else if (blob.type.includes('gif')) fileExtension = 'gif';
+      } else {
+        // Fallback: check URL extension
+        const urlLower = ad.image_url.toLowerCase();
+        if (urlLower.includes('.png')) fileExtension = 'png';
+        else if (urlLower.includes('.webp')) fileExtension = 'webp';
+        else if (urlLower.includes('.gif')) fileExtension = 'gif';
+      }
+      
+      // Create object URL
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${ad.title || 'ad'}-${ad.id}.${fileExtension}`;
+      link.style.display = 'none';
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download image:', error);
+      setToastMessage(`Failed to download "${ad.title || 'image'}". Please try again.`);
+      setShowToast(true);
+    }
   };
 
-  // Handle download all
-  const handleDownloadAll = () => {
-    if (!project) return;
-    project.ads.forEach((ad, index) => {
-      setTimeout(() => {
-        handleDownload(ad);
-      }, index * 500);
+  // Handle download all images
+  const handleDownloadAll = async () => {
+    if (!project || project.ads.length === 0) return;
+    
+    // Show loading state (optional - you could add a loading indicator)
+    const downloadPromises = project.ads.map(async (ad, index) => {
+      // Add delay between downloads to avoid browser blocking multiple simultaneous downloads
+      await new Promise(resolve => setTimeout(resolve, index * 300));
+      await handleDownload(ad);
     });
+    
+    try {
+      await Promise.all(downloadPromises);
+      // Show success message
+      setToastMessage(`Successfully downloaded ${project.ads.length} image${project.ads.length !== 1 ? 's' : ''}!`);
+      setShowToast(true);
+    } catch (error) {
+      console.error('Error downloading images:', error);
+      setToastMessage('Some images failed to download. Please try again.');
+      setShowToast(true);
+    }
   };
 
   // Handle delete ad
@@ -103,11 +161,15 @@ export default function ProjectDetailPage() {
           ...project,
           ads: project.ads.filter((a) => a.id !== ad.id),
         });
+        setToastMessage("Ad deleted successfully");
+        setShowToast(true);
       } else {
-        alert(response.message || "Failed to delete ad");
+        setToastMessage(response.message || "Failed to delete ad");
+        setShowToast(true);
       }
     } catch (err) {
-      alert("Failed to delete ad");
+      setToastMessage("Failed to delete ad");
+      setShowToast(true);
       console.error(err);
     } finally {
       setDeletingAdId(null);
@@ -319,6 +381,15 @@ export default function ProjectDetailPage() {
         ad={selectedAd}
         onClose={() => setSelectedAd(null)}
         onDownload={handleDownload}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        onClose={() => setShowToast(false)}
+        duration={3000}
+        position="top-right"
       />
     </div>
   );
