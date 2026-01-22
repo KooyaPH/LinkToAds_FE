@@ -99,6 +99,7 @@ export default function StrategyPage() {
   });
 
   const [keyFeatures, setKeyFeatures] = useState<string[]>([]);
+  const [newFeatureInput, setNewFeatureInput] = useState<string>("");
   const [testimonials, setTestimonials] = useState<Array<{
     quote: string;
     author: string;
@@ -1522,19 +1523,39 @@ export default function StrategyPage() {
                   </svg>
                   <h3 className="text-sm font-semibold text-white">Key Features</h3>
                 </div>
+              </div>
+              
+              {/* Add New Feature Input */}
+              <div className="mb-4 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newFeatureInput}
+                  onChange={(e) => setNewFeatureInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newFeatureInput.trim()) {
+                      setKeyFeatures([...keyFeatures, newFeatureInput.trim()]);
+                      setNewFeatureInput("");
+                    }
+                  }}
+                  placeholder="Enter a new feature..."
+                  className="flex-1 rounded-lg border border-[#141533] bg-[#0a0a12] px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#6a4cff] transition-colors"
+                />
                 <button
                   type="button"
                   onClick={() => {
-                    const newFeature = prompt("Enter a new feature:");
-                    if (newFeature) {
-                      setKeyFeatures([...keyFeatures, newFeature]);
+                    if (newFeatureInput.trim()) {
+                      setKeyFeatures([...keyFeatures, newFeatureInput.trim()]);
+                      setNewFeatureInput("");
                     }
                   }}
-                  className="text-xs text-[#6a4cff] hover:text-[#8a6cff] transition-colors"
+                  disabled={!newFeatureInput.trim()}
+                  className="flex items-center gap-1.5 text-xs text-[#6a4cff] hover:text-[#8a6cff] transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-[#6a4cff]"
                 >
-                  + Add
+                  <span className="text-[#6a4cff] text-xs">+</span>
+                  <span>Add</span>
                 </button>
               </div>
+              
               <div className="space-y-2">
                 {keyFeatures.map((feature, index) => (
                   <div key={index} className="group relative flex items-center">
