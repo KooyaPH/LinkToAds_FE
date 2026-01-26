@@ -119,6 +119,7 @@ export default function StrategyPage() {
   const [extractedLogo, setExtractedLogo] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  const [isGenerating, setIsGenerating] = useState(false);
   
   // Uploaded images state
   const [uploadedLogo, setUploadedLogo] = useState<string | null>(null);
@@ -1962,11 +1963,18 @@ export default function StrategyPage() {
             {/* Generate Ads Button */}
             <button
               onClick={async () => {
+                // Prevent multiple clicks
+                if (isGenerating) {
+                  return;
+                }
+
                 // Validate that at least one banner size is selected
                 if (selectedBannerSizes.length === 0) {
                   alert('Please select at least one banner size before generating ads.');
                   return;
                 }
+
+                setIsGenerating(true);
 
                 // Save brand assets and requested ad count to localStorage before navigating
                 try {
@@ -2058,27 +2066,39 @@ export default function StrategyPage() {
                   }
                 } catch (error) {
                   console.error('Error saving brand assets:', error);
+                  setIsGenerating(false);
+                  return;
                 }
 
                 // Navigate to banners page
                 router.push('/dashboard/generate/banners');
               }}
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-6 py-3 text-white font-medium transition-all hover:from-[#9333ea] hover:to-[#db2777] shadow-lg shadow-purple-500/20"
+              disabled={isGenerating}
+              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-6 py-3 text-white font-medium transition-all hover:from-[#9333ea] hover:to-[#db2777] shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Generate {selectedAds} Ads</span>
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+              {isGenerating ? (
+                <>
+                  <LoadingSpinner size="sm" />
+                  <span>Generating...</span>
+                </>
+              ) : (
+                <>
+                  <span>Generate {selectedAds} Ads</span>
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </>
+              )}
             </button>
           </div>
 

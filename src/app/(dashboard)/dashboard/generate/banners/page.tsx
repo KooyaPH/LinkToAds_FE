@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { steps } from "@/lib/generateConstants";
@@ -44,8 +44,17 @@ export default function BannersPage() {
     limit: 5,
   });
 
+  // Ref to prevent double execution in React Strict Mode
+  const hasGeneratedRef = useRef(false);
+
   // Generate banners on mount (or load from cache if already generated)
   useEffect(() => {
+    // Prevent double execution
+    if (hasGeneratedRef.current) {
+      return;
+    }
+    hasGeneratedRef.current = true;
+
     const generateBanners = async () => {
       try {
         // Get extracted data from localStorage
